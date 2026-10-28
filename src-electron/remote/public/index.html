@@ -123,6 +123,29 @@
         border-color: var(--accent-green);
         color: #7ee787;
       }
+      .badge-zoom-share {
+        background: rgba(56, 139, 253, 0.2);
+        border-color: rgba(56, 139, 253, 0.6);
+        color: #79c0ff;
+        cursor: pointer;
+      }
+      .badge-zoom-share:active {
+        background: rgba(56, 139, 253, 0.35);
+      }
+      .btn-badge-action {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 4px;
+        color: #fff;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 1px 6px;
+        margin-left: 2px;
+        cursor: pointer;
+      }
+      .btn-badge-action:active {
+        background: rgba(255, 255, 255, 0.4);
+      }
 
       main {
         flex: 1;
@@ -169,6 +192,24 @@
         line-height: 1.3;
         word-break: break-word;
         color: var(--text-main);
+      }
+      .now-playing-art-wrap {
+        width: 100%;
+        max-height: 220px;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--card-border);
+      }
+      .now-playing-art {
+        width: 100%;
+        height: auto;
+        max-height: 220px;
+        object-fit: contain;
+        display: block;
       }
       .media-playback-state {
         font-size: 0.85rem;
@@ -268,6 +309,18 @@
         width: 32px;
         height: 32px;
       }
+      .btn-play-pause .icon-pause {
+        display: none !important;
+      }
+      .btn-play-pause .icon-play {
+        display: block !important;
+      }
+      .btn-play-pause.is-playing .icon-play {
+        display: none !important;
+      }
+      .btn-play-pause.is-playing .icon-pause {
+        display: block !important;
+      }
       .btn-blackout {
         border-radius: 12px;
         width: auto;
@@ -347,10 +400,12 @@
         flex-direction: column;
         gap: 8px;
         overflow-y: auto;
-        max-height: 480px;
+        max-height: 560px;
         padding-right: 4px;
       }
       .playlist-section {
+        flex-shrink: 0;
+        min-height: min-content;
         border: 1px solid var(--card-border);
         background: rgba(22, 27, 34, 0.4);
         border-radius: 12px;
@@ -411,6 +466,8 @@
         flex-shrink: 0;
       }
       .playlist-section-content {
+        flex-shrink: 0;
+        min-height: min-content;
         display: flex;
         flex-direction: column;
         gap: 6px;
@@ -418,10 +475,12 @@
         border-top: 1px solid var(--card-border);
       }
       .playlist-section.collapsed .playlist-section-content {
-        display: none;
+        display: none !important;
       }
 
       .playlist-divider {
+        flex-shrink: 0;
+        min-height: min-content;
         display: flex;
         align-items: center;
         gap: 8px;
@@ -443,6 +502,8 @@
         flex-shrink: 0;
       }
       .playlist-folder {
+        flex-shrink: 0;
+        min-height: min-content;
         border: 1px solid var(--card-border);
         background: rgba(22, 27, 34, 0.6);
         border-radius: 12px;
@@ -502,6 +563,8 @@
         flex-shrink: 0;
       }
       .playlist-folder-content {
+        flex-shrink: 0;
+        min-height: min-content;
         display: flex;
         flex-direction: column;
         gap: 6px;
@@ -509,9 +572,11 @@
         border-top: 1px solid var(--card-border);
       }
       .playlist-folder.collapsed .playlist-folder-content {
-        display: none;
+        display: none !important;
       }
       .playlist-item {
+        flex-shrink: 0;
+        min-height: min-content;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -530,6 +595,34 @@
       .playlist-item.active {
         border-color: var(--primary);
         background: rgba(31, 111, 235, 0.12);
+      }
+      .playlist-thumb-wrap {
+        width: 72px;
+        height: 44px;
+        border-radius: 6px;
+        overflow: hidden;
+        background: #161b22;
+        border: 1px solid var(--card-border);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .playlist-thumb {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .playlist-thumb-fallback {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        background: linear-gradient(135deg, #21262d 0%, #161b22 100%);
+        user-select: none;
       }
       .playlist-item-info {
         display: flex;
@@ -671,6 +764,26 @@
       </div>
       <div class="status-badges">
         <div
+          id="zoomShareBadge"
+          class="badge badge-zoom-share"
+          title="Zoom Media Share Active - Click to stop sharing"
+          hidden
+        >
+          <span
+            class="badge-dot"
+            style="background-color: #388bfd; box-shadow: 0 0 8px #388bfd"
+          ></span>
+          <span>Zoom Sharing</span>
+          <button
+            id="btnStopZoomShare"
+            class="btn-badge-action"
+            type="button"
+            title="Stop sharing media in Zoom"
+          >
+            Stop
+          </button>
+        </div>
+        <div
           id="blackoutBadge"
           class="badge badge-blackout visible"
           title="Toggle Blank Screen"
@@ -734,6 +847,9 @@
             </div>
           </div>
         </div>
+        <div id="mediaArtContainer" class="now-playing-art-wrap" hidden>
+          <img id="mediaArt" class="now-playing-art" src="" alt="" />
+        </div>
         <div id="mediaTitle" class="media-title">Nothing playing</div>
 
         <!-- Scrubber -->
@@ -776,10 +892,10 @@
             aria-label="Play / Pause"
             title="Play or Pause"
           >
-            <svg id="iconPlay" viewBox="0 0 24 24">
+            <svg id="iconPlay" class="icon-play" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
             </svg>
-            <svg id="iconPause" viewBox="0 0 24 24" hidden>
+            <svg id="iconPause" class="icon-pause" viewBox="0 0 24 24" hidden>
               <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
             </svg>
           </button>
@@ -870,6 +986,9 @@
         let reconnectTimer = null;
         let currentState = null;
         let isUserSeeking = false;
+        let renderedPlaylistSignature = '';
+        let lastActiveUniqueId = '';
+        let isStoppingZoomShare = false;
 
         // Extract PIN from URL query param if present
         const urlParams = new URLSearchParams(window.location.search);
@@ -882,6 +1001,8 @@
         const connBadgeText = document.getElementById('connBadgeText');
         const blackoutBadge = document.getElementById('blackoutBadge');
         const blackoutBadgeText = document.getElementById('blackoutBadgeText');
+        const zoomShareBadge = document.getElementById('zoomShareBadge');
+        const btnStopZoomShare = document.getElementById('btnStopZoomShare');
         const pinModal = document.getElementById('pinModal');
         const pinInput = document.getElementById('pinInput');
         const pinError = document.getElementById('pinError');
@@ -891,6 +1012,14 @@
         const mediaPlaybackState =
           document.getElementById('mediaPlaybackState');
         const mediaTitle = document.getElementById('mediaTitle');
+        const mediaArtContainer = document.getElementById('mediaArtContainer');
+        const mediaArt = document.getElementById('mediaArt');
+        mediaArt.addEventListener('error', function () {
+          mediaArtContainer.hidden = true;
+        });
+        mediaArt.addEventListener('load', function () {
+          mediaArtContainer.hidden = false;
+        });
         const seekBar = document.getElementById('seekBar');
         const currentTimeLabel = document.getElementById('currentTimeLabel');
         const durationLabel = document.getElementById('durationLabel');
@@ -912,6 +1041,7 @@
 
         const collapsedFolders = new Set();
         const collapsedSections = new Set();
+        let hasInitializedSectionFolding = false;
 
         function formatTime(seconds) {
           if (!seconds || isNaN(seconds) || seconds < 0) return '0:00';
@@ -1042,6 +1172,13 @@
             blackoutBtnLabel.textContent = 'Show Screen';
           }
 
+          // Zoom Sharing status
+          if (state.zoomSharing && !isStoppingZoomShare) {
+            zoomShareBadge.hidden = false;
+          } else {
+            zoomShareBadge.hidden = true;
+          }
+
           // Title and media type
           mediaTitle.textContent = state.title || 'Nothing playing';
           mediaTypeTag.textContent = (state.mediaType || 'IDLE').toUpperCase();
@@ -1049,16 +1186,31 @@
           // Playback state
           if (state.isPlaying) {
             mediaPlaybackState.textContent = 'Playing';
-            iconPlay.hidden = true;
-            iconPause.hidden = false;
+            btnPlayPause.classList.add('is-playing');
+            iconPlay.style.display = 'none';
+            iconPause.style.display = 'block';
           } else if (state.isPaused) {
             mediaPlaybackState.textContent = 'Paused';
-            iconPlay.hidden = false;
-            iconPause.hidden = true;
+            btnPlayPause.classList.remove('is-playing');
+            iconPlay.style.display = 'block';
+            iconPause.style.display = 'none';
           } else {
             mediaPlaybackState.textContent = 'Stopped';
-            iconPlay.hidden = false;
-            iconPause.hidden = true;
+            btnPlayPause.classList.remove('is-playing');
+            iconPlay.style.display = 'block';
+            iconPause.style.display = 'none';
+          }
+
+          // Artwork display
+          if (state.thumbnailUrl && (state.isPlaying || state.isPaused)) {
+            if (mediaArt.getAttribute('data-src') !== state.thumbnailUrl) {
+              mediaArt.setAttribute('data-src', state.thumbnailUrl);
+              mediaArt.src = state.thumbnailUrl;
+            }
+          } else {
+            mediaArt.removeAttribute('data-src');
+            mediaArt.src = '';
+            mediaArtContainer.hidden = true;
           }
 
           // Seek slider
@@ -1080,6 +1232,7 @@
         function createPlaylistItemElement(item, isActive) {
           const el = document.createElement('div');
           el.className = 'playlist-item' + (isActive ? ' active' : '');
+          el.setAttribute('data-unique-id', item.uniqueId);
 
           const typeTag = item.isVideo
             ? 'Video'
@@ -1088,12 +1241,34 @@
               : item.isImage
                 ? 'Image'
                 : 'Media';
+          const typeIcon = item.isAudio
+            ? '🎵'
+            : item.isVideo
+              ? '🎬'
+              : item.isImage
+                ? '🖼️'
+                : '▶️';
           const durationStr = item.duration ? formatTime(item.duration) : '';
           const songTag = item.songNumber
             ? `<span class="tag-song">🎵 #${escapeHtml(String(item.songNumber))}</span>`
             : '';
 
+          let thumbHtml = '';
+          if (item.thumbnailUrl) {
+            thumbHtml = `
+              <div class="playlist-thumb-wrap">
+                <img class="playlist-thumb" src="${escapeHtml(item.thumbnailUrl)}" loading="lazy" alt="" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
+                <div class="playlist-thumb-fallback" style="display:none;">${typeIcon}</div>
+              </div>`;
+          } else {
+            thumbHtml = `
+              <div class="playlist-thumb-wrap">
+                <div class="playlist-thumb-fallback">${typeIcon}</div>
+              </div>`;
+          }
+
           el.innerHTML = `
+          ${thumbHtml}
           <div class="playlist-item-info">
             <div class="playlist-item-title-row">
               ${songTag}
@@ -1108,12 +1283,14 @@
         `;
 
           el.addEventListener('click', function () {
+            lastActiveUniqueId = item.uniqueId;
             if (currentState) {
               currentState.isPlaying = true;
               currentState.isPaused = false;
               currentState.uniqueId = item.uniqueId;
-              iconPlay.hidden = true;
-              iconPause.hidden = false;
+              btnPlayPause.classList.add('is-playing');
+              iconPlay.style.display = 'none';
+              iconPause.style.display = 'block';
               mediaPlaybackState.textContent = 'Playing';
               mediaTitle.textContent = item.title || 'Playing';
             }
@@ -1134,13 +1311,75 @@
           playlistCount.textContent = playableItems.length.toString();
 
           if (!playlist || playlist.length === 0) {
+            renderedPlaylistSignature = '';
+            lastActiveUniqueId = '';
             playlistItems.innerHTML =
               '<div style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 24px 0;">No items in queue</div>';
             return;
           }
 
-          // If the active item is in a collapsed folder or section, expand them so it is visible
-          if (activeUniqueId) {
+          const currentSignature = playlist
+            .map(function (it) {
+              return (
+                (it.uniqueId || '') +
+                ':' +
+                (it.title || '') +
+                ':' +
+                (it.isDivider ? '1' : '0') +
+                ':' +
+                (it.groupId || '') +
+                ':' +
+                (it.groupTitle || '') +
+                ':' +
+                (it.sectionId || it.section || '') +
+                ':' +
+                (it.thumbnailUrl || '')
+              );
+            })
+            .join('|');
+
+          // If the playlist structure hasn't changed, only update active styling without re-rendering DOM
+          if (currentSignature === renderedPlaylistSignature) {
+            if (activeUniqueId !== lastActiveUniqueId) {
+              lastActiveUniqueId = activeUniqueId;
+              const allItems = playlistItems.querySelectorAll('.playlist-item');
+              allItems.forEach(function (el) {
+                const uid = el.getAttribute('data-unique-id');
+                const isNowActive = uid && uid === activeUniqueId;
+                if (isNowActive) {
+                  el.classList.add('active');
+                  if (!el.querySelector('.status-playing-badge')) {
+                    const badge = document.createElement('span');
+                    badge.className = 'status-playing-badge';
+                    badge.textContent = 'PLAYING';
+                    el.appendChild(badge);
+                  }
+                  // Auto-uncollapse parent section or folder if newly active
+                  let parent = el.parentElement;
+                  while (parent && parent !== playlistItems) {
+                    if (
+                      parent.classList.contains('playlist-folder') ||
+                      parent.classList.contains('playlist-section')
+                    ) {
+                      parent.classList.remove('collapsed');
+                    }
+                    parent = parent.parentElement;
+                  }
+                } else {
+                  el.classList.remove('active');
+                  const badge = el.querySelector('.status-playing-badge');
+                  if (badge) badge.remove();
+                }
+              });
+            }
+            return;
+          }
+
+          renderedPlaylistSignature = currentSignature;
+          lastActiveUniqueId = activeUniqueId;
+
+          // If the active item changed to a new item, auto-expand its section and folder
+          if (activeUniqueId && activeUniqueId !== lastActiveUniqueId) {
             playlist.forEach(function (it) {
               if (it.uniqueId === activeUniqueId) {
                 if (it.groupId) collapsedFolders.delete(it.groupId);
@@ -1162,6 +1401,32 @@
             }
             sectionsMap.get(secKey).items.push(item);
           });
+
+          // On initial playlist render with multiple sections:
+          // Keep only the active section (or first section) open, collapse the others!
+          if (!hasInitializedSectionFolding && sectionsMap.size > 1) {
+            hasInitializedSectionFolding = true;
+            let activeSecKey = null;
+            if (activeUniqueId) {
+              sectionsMap.forEach(function (data, key) {
+                if (
+                  data.items.some(function (it) {
+                    return it.uniqueId === activeUniqueId;
+                  })
+                ) {
+                  activeSecKey = key;
+                }
+              });
+            }
+            if (!activeSecKey) {
+              activeSecKey = sectionsMap.keys().next().value;
+            }
+            sectionsMap.forEach(function (_, key) {
+              if (key !== activeSecKey) {
+                collapsedSections.add(key);
+              }
+            });
+          }
 
           sectionsMap.forEach(function (secData, secKey) {
             const secPlayableCount = secData.items.filter(function (i) {
@@ -1221,10 +1486,11 @@
               if (item.groupId) {
                 if (item.groupId !== currentFolderId) {
                   currentFolderId = item.groupId;
+                  const thisGroupId = item.groupId;
                   folderItemCount = 0;
 
                   const folderContainer = document.createElement('div');
-                  const isCollapsed = collapsedFolders.has(item.groupId);
+                  const isCollapsed = collapsedFolders.has(thisGroupId);
                   folderContainer.className =
                     'playlist-folder' + (isCollapsed ? ' collapsed' : '');
 
@@ -1249,11 +1515,11 @@
 
                   folderHeader.addEventListener('click', function (e) {
                     e.stopPropagation();
-                    if (collapsedFolders.has(item.groupId)) {
-                      collapsedFolders.delete(item.groupId);
+                    if (collapsedFolders.has(thisGroupId)) {
+                      collapsedFolders.delete(thisGroupId);
                       folderContainer.classList.remove('collapsed');
                     } else {
-                      collapsedFolders.add(item.groupId);
+                      collapsedFolders.add(thisGroupId);
                       folderContainer.classList.add('collapsed');
                     }
                   });
@@ -1284,6 +1550,7 @@
         }
 
         function escapeHtml(text) {
+          if (!text) return '';
           const div = document.createElement('div');
           div.textContent = text;
           return div.innerHTML;
@@ -1298,15 +1565,17 @@
           if (currentState.isPlaying) {
             currentState.isPlaying = false;
             currentState.isPaused = true;
-            iconPlay.hidden = false;
-            iconPause.hidden = true;
+            btnPlayPause.classList.remove('is-playing');
+            iconPlay.style.display = 'block';
+            iconPause.style.display = 'none';
             mediaPlaybackState.textContent = 'Paused';
             sendCommand({ type: 'pause' });
           } else {
             currentState.isPlaying = true;
             currentState.isPaused = false;
-            iconPlay.hidden = true;
-            iconPause.hidden = false;
+            btnPlayPause.classList.add('is-playing');
+            iconPlay.style.display = 'none';
+            iconPause.style.display = 'block';
             mediaPlaybackState.textContent = 'Playing';
             sendCommand({ type: 'play' });
           }
@@ -1317,8 +1586,9 @@
             currentState.isPlaying = false;
             currentState.isPaused = false;
             currentState.isStopped = true;
-            iconPlay.hidden = false;
-            iconPause.hidden = true;
+            btnPlayPause.classList.remove('is-playing');
+            iconPlay.style.display = 'block';
+            iconPause.style.display = 'none';
             mediaPlaybackState.textContent = 'Stopped';
           }
           sendCommand({ type: 'stop' });
@@ -1343,6 +1613,20 @@
         });
         blackoutBadge.addEventListener('click', function () {
           sendCommand({ type: 'toggle_blackout' });
+        });
+        function stopZoomShare() {
+          isStoppingZoomShare = true;
+          zoomShareBadge.hidden = true;
+          sendCommand({ type: 'stop_zoom_share' });
+          setTimeout(function () {
+            isStoppingZoomShare = false;
+          }, 3500);
+        }
+
+        zoomShareBadge.addEventListener('click', stopZoomShare);
+        btnStopZoomShare.addEventListener('click', function (e) {
+          e.stopPropagation();
+          stopZoomShare();
         });
 
         // Seek Slider interaction

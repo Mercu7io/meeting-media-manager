@@ -14,3 +14,7 @@
 - Enhanced mobile remote control with direct stop execution, optimistic play/pause transitions, playlist refresh button, song number badges, and collapsible meeting folder groups.
 - Fixed playback state resolution in formatRemoteControlState to correctly recognize active media when mediaPlaying.action is empty, allowing the play button to properly toggle to pause.
 - Added divider item display and foldable meeting sections with item count badges to the remote control web view.
+- Added media artwork to the Now Playing card and media thumbnail previews to queue items in the remote control web client, served via an embedded thumbnail streaming endpoint.
+- Fixed media queue folding DOM thrashing, stripped group caption HTML tags, and added live Zoom sharing status feedback with a one-tap force-stop control.
+- Resolved thumbnail streaming for video and audio companion images, eliminated playlist DOM cache invalidation, and added zero-latency Zoom sharing state synchronization.
+- Fixed remote control play/pause icon toggling, eliminated queue flexbox clipping, added multi-section initial auto-collapse, and implemented resilient SVG thumbnail fallback streaming for audio/video media.

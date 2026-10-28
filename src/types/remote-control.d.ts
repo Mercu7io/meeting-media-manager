@@ -7,6 +7,7 @@ export type RemoteControlAction =
   | { type: 'previous' }
   | { type: 'refresh_playlist' }
   | { type: 'stop' }
+  | { type: 'stop_zoom_share' }
   | { type: 'toggle_blackout' };
 
 export interface RemoteControlStartOptions {
@@ -24,9 +25,12 @@ export interface RemoteControlState {
   mediaType: RemoteMediaType;
   mediaWindowVisible: boolean;
   playlist: RemotePlaylistItem[];
+  thumbnailPath?: string;
   thumbnailUrl?: string;
   title: string;
   uniqueId?: string;
+  zoomConnected?: boolean;
+  zoomSharing?: boolean;
 }
 
 export interface RemoteControlStatus {
@@ -52,6 +56,7 @@ export interface RemotePlaylistItem {
   section?: string;
   sectionId?: string;
   songNumber?: number | string;
+  thumbnailPath?: string;
   thumbnailUrl?: string;
   title: string;
   uniqueId: string;

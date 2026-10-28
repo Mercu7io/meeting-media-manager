@@ -10,9 +10,11 @@ import { i18n } from 'boot/i18n';
 import { errorCatcher } from 'src/helpers/error-catcher';
 import { toggleMediaWindowVisibility } from 'src/helpers/mediaPlayback';
 import { createTemporaryNotification } from 'src/helpers/notifications';
+import { stopSharingMediaInZoom } from 'src/helpers/zoom';
 import { log } from 'src/shared/vanilla';
 import { isAudio, isImage, isVideo } from 'src/utils/media';
 import { useCurrentStateStore } from 'stores/current-state';
+import { useZoomStateStore } from 'stores/zoom-state';
 
 const t = (key: string) => (i18n.global.t as (key: string) => string)(key);
 
@@ -46,10 +48,74 @@ const notifyStartFailed = (error: string | undefined) => {
   });
 };
 
+const resolveItemTitle = (
+  rawTitle?: string,
+  extractCaption?: string,
+  fileUrl?: string,
+): string => {
+  let t = rawTitle?.trim();
+  if (!t && extractCaption) {
+    t = extractCaption
+      .replace(/<[^>]+>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+  if (!t && fileUrl) {
+    const clean = fileUrl.split('?')[0] || '';
+    const fname = clean.split('/').pop()?.split('\\').pop() || '';
+    t = decodeURIComponent(fname).replace(/\.[^.]+$/, '');
+  }
+  return t || 'Untitled';
+};
+
+const resolveThumbnail = (
+  rawThumbUrl?: string,
+  rawFileUrl?: string,
+  isImg?: boolean,
+  uniqueId?: string,
+): { thumbnailPath?: string; thumbnailUrl?: string } => {
+  if (rawThumbUrl && /^https?:\/\//i.test(rawThumbUrl)) {
+    return {
+      thumbnailUrl: rawThumbUrl,
+    };
+  }
+
+  const target = rawThumbUrl || rawFileUrl;
+  if (!target || target.startsWith('?')) return {};
+
+  let localPath = target;
+  try {
+    const fileUrlToPath = globalThis.electronApi?.fileUrlToPath;
+    if (fileUrlToPath && target.startsWith('file://')) {
+      localPath = fileUrlToPath(target);
+    } else if (target.startsWith('file://')) {
+      localPath = decodeURIComponent(new URL(target).pathname);
+      if (/^\/[a-zA-Z]:/.test(localPath)) {
+        localPath = localPath.slice(1);
+      }
+    }
+  } catch {
+    localPath = target.replace(/^file:\/\/\/?/, '');
+  }
+
+  const endpointUrl = uniqueId
+    ? `/api/thumbnail?id=${encodeURIComponent(uniqueId)}`
+    : undefined;
+
+  return {
+    thumbnailPath: localPath || undefined,
+    thumbnailUrl: endpointUrl,
+  };
+};
+
 export const formatRemoteControlState = (): RemoteControlState => {
   const currentState = useCurrentStateStore();
   const mediaPlaying = currentState.mediaPlaying;
   const mediaWindowVisible = currentState.mediaWindowVisible;
+  const zoomState = useZoomStateStore();
+  const zoomSharing = !!zoomState.meeting?.sharing;
+  const zoomConnected = !!zoomState.meeting?.found;
 
   // Build playlist items from currently selected date's media sections
   const playlist: RemotePlaylistItem[] = [];
@@ -71,19 +137,35 @@ export const formatRemoteControlState = (): RemoteControlState => {
           section: sectionName,
           sectionId,
           title: item.title || '',
-          uniqueId: item.uniqueId || `divider-${item.title || Math.random()}`,
+          uniqueId:
+            item.uniqueId ||
+            `divider-${sectionId || 'sec'}-${item.title || 'div'}`,
         });
         continue;
       }
 
+      // Skip invalid / ghost items that have no fileUrl, no children, and are not dividers
+      if (!item.fileUrl && !item.children?.length) {
+        continue;
+      }
+
       if (item.children?.length) {
-        const groupTitle = item.extractCaption || item.title || undefined;
-        const groupId = item.uniqueId || undefined;
+        const rawGroupTitle = item.extractCaption || item.title || '';
+        const cleanGroupTitle =
+          rawGroupTitle
+            .replace(/<[^>]+>/g, '')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim() || undefined;
+        const groupId =
+          item.uniqueId ||
+          `group-${sectionId || 'sec'}-${cleanGroupTitle || 'grp'}`;
         const groupSongNumber =
           item.tag?.type === 'song' ? item.tag.value : undefined;
 
         for (const child of item.children) {
           if (child.hidden) continue;
+          if (!child.fileUrl && !child.children?.length) continue;
           const image = !!child.isImage || isImage(child.fileUrl);
           const video = !image && !!child.fileUrl && isVideo(child.fileUrl);
           const audio =
@@ -91,20 +173,34 @@ export const formatRemoteControlState = (): RemoteControlState => {
 
           const childSongNumber =
             child.tag?.type === 'song' ? child.tag.value : groupSongNumber;
+          const childUniqueId = child.uniqueId || child.fileUrl || '';
+          const thumb = resolveThumbnail(
+            child.thumbnailUrl,
+            child.fileUrl,
+            image,
+            childUniqueId,
+          );
+
+          const childTitle = resolveItemTitle(
+            child.title,
+            child.extractCaption,
+            child.fileUrl,
+          );
 
           playlist.push({
             duration: child.duration || 0,
             groupId,
-            groupTitle,
+            groupTitle: cleanGroupTitle,
             isAudio: audio,
             isImage: image,
             isVideo: video,
             section: sectionName,
             sectionId,
             songNumber: childSongNumber,
-            thumbnailUrl: child.thumbnailUrl || undefined,
-            title: child.title || '',
-            uniqueId: child.uniqueId || child.fileUrl || '',
+            thumbnailPath: thumb.thumbnailPath,
+            thumbnailUrl: thumb.thumbnailUrl,
+            title: childTitle,
+            uniqueId: childUniqueId,
           });
         }
       } else {
@@ -115,6 +211,19 @@ export const formatRemoteControlState = (): RemoteControlState => {
 
         const songNumber =
           item.tag?.type === 'song' ? item.tag.value : undefined;
+        const itemUniqueId = item.uniqueId || item.fileUrl || '';
+        const thumb = resolveThumbnail(
+          item.thumbnailUrl,
+          item.fileUrl,
+          image,
+          itemUniqueId,
+        );
+
+        const itemTitle = resolveItemTitle(
+          item.title,
+          item.extractCaption,
+          item.fileUrl,
+        );
 
         playlist.push({
           duration: item.duration || 0,
@@ -124,9 +233,10 @@ export const formatRemoteControlState = (): RemoteControlState => {
           section: sectionName,
           sectionId,
           songNumber,
-          thumbnailUrl: item.thumbnailUrl || undefined,
-          title: item.title || '',
-          uniqueId: item.uniqueId || item.fileUrl || '',
+          thumbnailPath: thumb.thumbnailPath,
+          thumbnailUrl: thumb.thumbnailUrl,
+          title: itemTitle,
+          uniqueId: itemUniqueId,
         });
       }
     }
@@ -141,6 +251,7 @@ export const formatRemoteControlState = (): RemoteControlState => {
   let mediaType: RemoteMediaType = 'none';
   let uniqueId = mediaPlaying.uniqueId || '';
   let thumbnailUrl: string | undefined;
+  let thumbnailPath: string | undefined;
 
   const matched = playlist.find(
     (p) =>
@@ -155,12 +266,22 @@ export const formatRemoteControlState = (): RemoteControlState => {
     else if (matched.isVideo) mediaType = 'video';
     else if (matched.isAudio) mediaType = 'audio';
     thumbnailUrl = matched.thumbnailUrl;
+    thumbnailPath = matched.thumbnailPath;
     if (!uniqueId) uniqueId = matched.uniqueId;
   } else if (mediaPlaying.url) {
     title = mediaPlaying.url.split('/').pop() || '';
-    if (isImage(mediaPlaying.url)) mediaType = 'image';
+    const image = isImage(mediaPlaying.url);
+    if (image) mediaType = 'image';
     else if (isVideo(mediaPlaying.url)) mediaType = 'video';
     else if (isAudio(mediaPlaying.url)) mediaType = 'audio';
+    const thumb = resolveThumbnail(
+      undefined,
+      mediaPlaying.url,
+      image,
+      uniqueId || mediaPlaying.url,
+    );
+    thumbnailUrl = thumb.thumbnailUrl;
+    thumbnailPath = thumb.thumbnailPath;
   }
 
   return {
@@ -172,9 +293,12 @@ export const formatRemoteControlState = (): RemoteControlState => {
     mediaType,
     mediaWindowVisible,
     playlist,
+    thumbnailPath,
     thumbnailUrl,
     title,
     uniqueId,
+    zoomConnected,
+    zoomSharing,
   };
 };
 
@@ -293,6 +417,19 @@ export const handleRemoteControlAction = (action: RemoteControlAction) => {
           };
           toggleMediaWindowVisibility(false);
         }
+        break;
+      }
+      case 'stop_zoom_share': {
+        const zoomState = useZoomStateStore();
+        if (zoomState.meeting) {
+          zoomState.meeting.sharing = false;
+        }
+        broadcastRemoteControlState();
+        stopSharingMediaInZoom().catch((error: unknown) => {
+          errorCatcher(error, {
+            contexts: { fn: { name: 'stopSharingMediaInZoom' } },
+          });
+        });
         break;
       }
       case 'toggle_blackout': {

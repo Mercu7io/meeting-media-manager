@@ -2,7 +2,10 @@ import type { RemoteControlAction, RemoteControlState } from 'src/types';
 
 import { getHttpServer } from 'app/test/vitest/mocks/http';
 import { http, passthrough } from 'msw';
+import { rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
+import { tmpdir } from 'node:os';
+import { join } from 'upath';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WebSocket } from 'ws';
 
@@ -152,6 +155,7 @@ describe('remote control server', () => {
     ws.send(JSON.stringify({ type: 'play' }));
     ws.send(JSON.stringify({ position: 45.2, type: 'seek' }));
     ws.send(JSON.stringify({ type: 'refresh_playlist' }));
+    ws.send(JSON.stringify({ type: 'stop_zoom_share' }));
     ws.send(
       JSON.stringify({
         play: true,
@@ -168,6 +172,7 @@ describe('remote control server', () => {
       { type: 'play' },
       { position: 45.2, type: 'seek' },
       { type: 'refresh_playlist' },
+      { type: 'stop_zoom_share' },
       { play: true, type: 'select_item', uniqueId: 'item-123' },
     ]);
 
@@ -196,5 +201,89 @@ describe('remote control server', () => {
     expect(broadcastMsg.data).toEqual(testState);
 
     ws.close();
+  });
+
+  it('streams thumbnail image over /api/thumbnail', async () => {
+    const { broadcastRemoteControlState, startRemoteControlServer } =
+      await import('src-electron/remote/server');
+    const port = await freePort();
+    await startRemoteControlServer({
+      pin: '1234',
+      port,
+      requirePin: false,
+    });
+
+    const tmpPath = join(tmpdir(), `test-thumb-${Date.now()}.jpg`);
+    writeFileSync(tmpPath, Buffer.from([0xff, 0xd8, 0xff, 0xe0]));
+
+    try {
+      broadcastRemoteControlState({
+        currentPosition: 0,
+        duration: 10,
+        isPaused: false,
+        isPlaying: false,
+        isStopped: true,
+        mediaType: 'image',
+        mediaWindowVisible: true,
+        playlist: [
+          {
+            thumbnailPath: tmpPath,
+            thumbnailUrl: '/api/thumbnail?id=img-item-1',
+            title: 'Image Test',
+            uniqueId: 'img-item-1',
+          },
+        ],
+        title: 'Image Test',
+        uniqueId: 'img-item-1',
+      });
+
+      const res = await fetch(
+        `http://127.0.0.1:${port}/api/thumbnail?id=img-item-1`,
+      );
+      expect(res.status).toBe(200);
+      expect(res.headers.get('content-type')).toBe('image/jpeg');
+      const bytes = new Uint8Array(await res.arrayBuffer());
+      expect(bytes[0]).toBe(0xff);
+      expect(bytes[1]).toBe(0xd8);
+
+      // Media item without on-disk companion image returns SVG fallback
+      broadcastRemoteControlState({
+        currentPosition: 0,
+        duration: 120,
+        isPaused: false,
+        isPlaying: false,
+        isStopped: true,
+        mediaType: 'video',
+        mediaWindowVisible: true,
+        playlist: [
+          {
+            thumbnailPath: '/path/to/nonexistent-song.mp4',
+            thumbnailUrl: '/api/thumbnail?id=vid-item-2',
+            title: 'Video Song',
+            uniqueId: 'vid-item-2',
+          },
+        ],
+        title: 'Video Song',
+        uniqueId: 'vid-item-2',
+      });
+
+      const fallbackRes = await fetch(
+        `http://127.0.0.1:${port}/api/thumbnail?id=vid-item-2`,
+      );
+      expect(fallbackRes.status).toBe(200);
+      expect(fallbackRes.headers.get('content-type')).toContain(
+        'image/svg+xml',
+      );
+      const svgText = await fallbackRes.text();
+      expect(svgText).toContain('<svg');
+      expect(svgText).toContain('VIDEO');
+
+      const notFoundRes = await fetch(
+        `http://127.0.0.1:${port}/api/thumbnail?id=unknown`,
+      );
+      expect(notFoundRes.status).toBe(404);
+    } finally {
+      rmSync(tmpPath, { force: true });
+    }
   });
 });

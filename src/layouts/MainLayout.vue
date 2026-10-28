@@ -182,6 +182,7 @@ import {
   useCurrentStateStore,
 } from 'src/stores/current-state';
 import { useJwStore } from 'src/stores/jw';
+import { useZoomStateStore } from 'src/stores/zoom-state';
 import { fetchYeartext } from 'src/utils/api';
 import { formatDate, getSpecificWeekday, isInPast } from 'src/utils/date';
 import { kebabToCamelCase } from 'src/utils/general';
@@ -218,6 +219,7 @@ const appSettings = useAppSettingsStore();
 const { displayCameraId } = storeToRefs(appSettings);
 
 const currentState = useCurrentStateStore();
+const zoomState = useZoomStateStore();
 const {
   currentCongregation,
   currentLangObject,
@@ -1872,6 +1874,7 @@ watch(
     currentState.mediaPlaying.url,
     currentState.mediaWindowVisible,
     currentState.selectedDate,
+    () => zoomState.meeting?.sharing,
   ],
   () => {
     if (currentState.remoteControlRunning) {

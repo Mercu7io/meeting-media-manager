@@ -1,9 +1,11 @@
 import type * as VueUse from '@vueuse/core';
+import type { ZoomMeetingState } from 'src/types';
 
 import { createPinia, setActivePinia } from 'pinia';
 import { defaultSettings } from 'src/constants/settings';
 import { useCongregationSettingsStore } from 'stores/congregation-settings';
 import { useCurrentStateStore } from 'stores/current-state';
+import { useZoomStateStore } from 'stores/zoom-state';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -20,6 +22,7 @@ const {
   createTemporaryNotification,
   electronApi,
   postSeek,
+  stopSharingMediaInZoom,
   toggleMediaWindowVisibility,
 } = vi.hoisted(() => ({
   createTemporaryNotification: vi.fn(),
@@ -30,6 +33,7 @@ const {
     stopRemoteControl: vi.fn(),
   },
   postSeek: vi.fn(),
+  stopSharingMediaInZoom: vi.fn(),
   toggleMediaWindowVisibility: vi.fn(),
 }));
 
@@ -39,6 +43,7 @@ vi.mock('boot/i18n', () => ({
 
 vi.mock('src/helpers/notifications', () => ({ createTemporaryNotification }));
 vi.mock('src/helpers/mediaPlayback', () => ({ toggleMediaWindowVisibility }));
+vi.mock('src/helpers/zoom', () => ({ stopSharingMediaInZoom }));
 vi.mock('@vueuse/core', async (importOriginal) => {
   const actual = await importOriginal<typeof VueUse>();
   return {
@@ -67,6 +72,7 @@ beforeEach(() => {
   electronApi.sendRemoteControlStateUpdate.mockReset();
   createTemporaryNotification.mockReset();
   toggleMediaWindowVisibility.mockReset();
+  stopSharingMediaInZoom.mockReset();
   postSeek.mockReset();
 });
 
@@ -386,9 +392,87 @@ describe('formatRemoteControlState & broadcastRemoteControlState', () => {
         isImage: true,
         section: 'Treasures From God’s Word',
         sectionId: 'treasures',
+        thumbnailUrl: '/api/thumbnail?id=child-1',
         title: 'Part 1 Slide',
         uniqueId: 'child-1',
       }),
     );
+    expect(state.playlist[2]?.thumbnailPath).toBeDefined();
+
+    // Now-playing state should inherit thumbnail info from playlist item
+    currentState.mediaPlaying.uniqueId = 'child-1';
+    currentState.mediaPlaying.url = 'file:///img1.jpg';
+    currentState.mediaPlaying.action = 'play';
+    const playingState = formatRemoteControlState();
+    expect(playingState.thumbnailUrl).toBe('/api/thumbnail?id=child-1');
+    expect(playingState.thumbnailPath).toBeDefined();
+  });
+
+  it('includes Zoom sharing state in formatted remote control state', () => {
+    const zoomState = useZoomStateStore();
+    zoomState.meeting = {
+      found: true,
+      sharing: true,
+    } as unknown as ZoomMeetingState;
+
+    const state = formatRemoteControlState();
+    expect(state.zoomSharing).toBe(true);
+    expect(state.zoomConnected).toBe(true);
+
+    zoomState.meeting = {
+      found: true,
+      sharing: false,
+    } as unknown as ZoomMeetingState;
+    const notSharingState = formatRemoteControlState();
+    expect(notSharingState.zoomSharing).toBe(false);
+    expect(notSharingState.zoomConnected).toBe(true);
+  });
+
+  it('handles stop_zoom_share action', async () => {
+    await handleRemoteControlAction({ type: 'stop_zoom_share' });
+    expect(stopSharingMediaInZoom).toHaveBeenCalledTimes(1);
+  });
+
+  it('filters out empty ghost items with no files or children and strips HTML from group captions', () => {
+    const currentState = useCurrentStateStore();
+    const mockDateObject = {
+      date: '2026-10-28',
+      mediaSections: [
+        {
+          config: { label: 'Weekend Meeting', uniqueId: 'weekend' },
+          items: [
+            // Ghost item (no fileUrl, no children, not divider)
+            {
+              title: '',
+              uniqueId: 'ghost-1',
+            },
+            // Group with HTML in extractCaption
+            {
+              children: [
+                {
+                  duration: 90,
+                  fileUrl: 'file:///item1.mp4',
+                  isVideo: true,
+                  title: 'Clean Child',
+                  uniqueId: 'child-clean',
+                },
+              ],
+              extractCaption: '<p><b>Discussion &nbsp;Part</b></p>',
+              uniqueId: 'group-html',
+            },
+          ],
+        },
+      ],
+    };
+
+    Object.defineProperty(currentState, 'selectedDateObject', {
+      configurable: true,
+      get: () => mockDateObject,
+    });
+
+    const state = formatRemoteControlState();
+    // Ghost item should be filtered out
+    expect(state.playlist).toHaveLength(1);
+    expect(state.playlist[0]?.groupTitle).toBe('Discussion Part');
   });
 });
