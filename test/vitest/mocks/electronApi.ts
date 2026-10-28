@@ -89,6 +89,14 @@ export const electronApi: ElectronApi = {
   getMediaWindowCaptureSourceId: function () {
     throw new Error('Function not implemented.');
   },
+  getRemoteControlStatus: async () => ({
+    clientCount: 0,
+    pin: '1234',
+    port: 8080,
+    requirePin: true,
+    running: false,
+    urls: [],
+  }),
   getScreenAccessStatus: function () {
     throw new Error('Function not implemented.');
   },
@@ -171,6 +179,9 @@ export const electronApi: ElectronApi = {
   onPathProbeNetworkWarning: function (callback) {
     throw new Error('Function not implemented.');
   },
+  onRemoteControlAction: function () {
+    return () => void 0;
+  },
   onShortcut: function (callback) {
     throw new Error('Function not implemented.');
   },
@@ -207,6 +218,9 @@ export const electronApi: ElectronApi = {
   },
   openExternal: function (website) {
     throw new Error('Function not implemented.');
+  },
+  openExternalUrl: function (url) {
+    return undefined;
   },
   openFileDialog: function (single, filter) {
     throw new Error('Function not implemented.');
@@ -257,6 +271,9 @@ export const electronApi: ElectronApi = {
   sendKeyTap: function (key, modifiers) {
     // no-op in tests
   },
+  sendRemoteControlStateUpdate: function () {
+    // no-op in tests
+  },
   setAutoStartAtLogin: function (value) {
     throw new Error('Function not implemented.');
   },
@@ -273,8 +290,17 @@ export const electronApi: ElectronApi = {
     throw new Error('Function not implemented.');
   },
   showFileOnWindows: async () => undefined,
+  startRemoteControl: async () => ({
+    clientCount: 0,
+    pin: '1234',
+    port: 8080,
+    requirePin: true,
+    running: true,
+    urls: ['http://127.0.0.1:8080/'],
+  }),
   startTimerRemote: async () => ({ running: true, urls: [] }),
   startZoomHelper: async () => ({ ok: true }),
+  stopRemoteControl: async () => void 0,
   stopTimerRemote: () => void 0,
   stopZoomHelper: () => void 0,
   timerRemoteText: () => void 0,

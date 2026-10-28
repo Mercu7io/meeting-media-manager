@@ -11,6 +11,8 @@ import type {
   JwSiteParams,
   MediaAccessStatus,
   NavigateWebsiteAction,
+  RemoteControlStartOptions,
+  RemoteControlState,
   SettingsValues,
   UnzipOptions,
   UrlVariables,
@@ -62,6 +64,12 @@ import {
 import { convertHeic } from 'src-electron/main/heic';
 import { openFolder } from 'src-electron/main/open-folder';
 import { exportHtmlToPdf } from 'src-electron/main/pdf';
+import {
+  getRemoteControlStatus,
+  startRemoteControl,
+  stopRemoteControl,
+  updateRemoteControlState,
+} from 'src-electron/main/remote-control';
 import { getAllScreens } from 'src-electron/main/screen';
 import {
   decryptSecret,
@@ -402,6 +410,20 @@ handleIpcSend('timerRemoteUpdate', (_e, data: unknown) => {
   updateTimerRemote(data);
 });
 
+handleIpcInvoke('getRemoteControlStatus', () => getRemoteControlStatus());
+
+handleIpcInvoke('startRemoteControl', async (_e, options: unknown) =>
+  startRemoteControl(options as RemoteControlStartOptions),
+);
+
+handleIpcInvoke('stopRemoteControl', async () => {
+  await stopRemoteControl();
+});
+
+handleIpcSend('remote-control:state-update', (_e, state: unknown) => {
+  updateRemoteControlState(state as RemoteControlState);
+});
+
 handleIpcSend('openExternal', (_e, website: ExternalWebsite) => {
   let url: string | undefined;
 
@@ -423,6 +445,22 @@ handleIpcSend('openExternal', (_e, website: ExternalWebsite) => {
       contexts: { fn: { name: 'openExternal', website } },
     });
   });
+});
+
+handleIpcSend('openExternalUrl', (_e, rawUrl: string) => {
+  if (typeof rawUrl !== 'string') return;
+  try {
+    const parsed = new URL(rawUrl);
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      openExternal(rawUrl).catch((error: unknown) => {
+        captureElectronError(error, {
+          contexts: { fn: { name: 'openExternalUrl', url: rawUrl } },
+        });
+      });
+    }
+  } catch {
+    // Ignore invalid URLs
+  }
 });
 
 handleIpcSend(

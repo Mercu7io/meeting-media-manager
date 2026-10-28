@@ -3099,6 +3099,16 @@ useEventListener(
   },
   { passive: true },
 );
+useEventListener(
+  globalThis,
+  'remoteControlStop',
+  () => {
+    if (isCurrentlyPlaying.value || currentlySpotlit.value) {
+      stopMedia();
+    }
+  },
+  { passive: true },
+);
 
 globalThis.addEventListener('scrollToSelectedMedia', () => {
   if (

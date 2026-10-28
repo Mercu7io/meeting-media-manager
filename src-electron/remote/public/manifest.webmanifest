@@ -1,0 +1,17 @@
+{
+  "name": "Meeting Media Manager Remote",
+  "short_name": "M³ Remote",
+  "description": "Mobile remote controller for Meeting Media Manager",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#1f6feb",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

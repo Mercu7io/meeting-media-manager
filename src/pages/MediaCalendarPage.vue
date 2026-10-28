@@ -2196,6 +2196,25 @@ useEventListener(
   { passive: true },
 );
 
+useEventListener(
+  globalThis,
+  'remoteControlSelectMedia',
+  (event: CustomEvent<{ play?: boolean; uniqueId: string }>) => {
+    if (!event.detail?.uniqueId) return;
+    selectedMediaItems.value = [event.detail.uniqueId];
+    anchorId.value = event.detail.uniqueId;
+    globalThis.dispatchEvent(new CustomEvent('scrollToSelectedMedia'));
+    if (event.detail.play) {
+      setTimeout(() => {
+        globalThis.dispatchEvent(
+          new CustomEvent<undefined>('shortcutMediaPauseResume'),
+        );
+      }, 50);
+    }
+  },
+  { passive: true },
+);
+
 Mousetrap.bind('up', () => {
   executeLocalShortcut('shortcutMediaPrevious');
 });

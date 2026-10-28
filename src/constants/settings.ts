@@ -576,6 +576,30 @@ export const settingsDefinitions: SettingsItems = {
     subgroup: 'folderWatcher',
     type: 'toggle',
   },
+  enableRemoteControl: {
+    group: 'integrations',
+    subgroup: 'remoteControl',
+    type: 'toggle',
+  },
+  remoteControlPort: {
+    depends: 'enableRemoteControl',
+    group: 'integrations',
+    rules: ['notEmpty', 'portNumber'],
+    subgroup: 'remoteControl',
+    type: 'text',
+  },
+  remoteControlRequirePin: {
+    depends: 'enableRemoteControl',
+    group: 'integrations',
+    subgroup: 'remoteControl',
+    type: 'toggle',
+  },
+  remoteControlPin: {
+    depends: ['enableRemoteControl', 'remoteControlRequirePin'],
+    group: 'integrations',
+    subgroup: 'remoteControl',
+    type: 'text',
+  },
   zoomEnable: {
     // With a media scene, OBS Studio shows media in Zoom itself, so letting
     // Zoom share the media window as well would show it twice.
@@ -1122,6 +1146,7 @@ export const defaultSettings: SettingsValues = {
   enableMusicButton: true,
   enablePinyinSongs: false,
   enablePlaybackSpeedControl: false,
+  enableRemoteControl: false,
   enableSubtitles: false,
   enableTimerDisplay: false,
   excludeCbsPubs: ['wcg'],
@@ -1260,6 +1285,9 @@ export const defaultSettings: SettingsValues = {
   recordingStartShortcut: null,
   recordingStopShortcut: null,
   relinkCongregationButton: false,
+  remoteControlPin: '1234',
+  remoteControlPort: '8080',
+  remoteControlRequirePin: true,
   resetFeatureSuggestions: null,
   reSyncMeetingScheduleButton: false,
   shortcutMediaNext: null,

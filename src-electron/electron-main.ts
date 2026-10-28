@@ -32,6 +32,7 @@ import {
 } from 'src-electron/main/downloads';
 import { cleanupFfmpegConversions } from 'src-electron/main/ffmpeg';
 import { cleanupHeicWorker } from 'src-electron/main/heic';
+import { stopRemoteControl } from 'src-electron/main/remote-control';
 import {
   pruneStaleFallbackEntries,
   readJsonResilient,
@@ -650,6 +651,7 @@ if (gotTheLock) {
   });
 
   app.on('will-quit', () => {
+    void stopRemoteControl();
     cleanupHeicWorker();
     cleanupFfmpegConversions();
     // will-quit (unlike before-quit) isn't reached until any interactive

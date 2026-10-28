@@ -197,6 +197,7 @@ const logPrefixes = {
   obs: '📡 OBS',
   publicationMedia: '📰 Publication Media',
   recording: '🔴 Recording',
+  remoteControl: '📱 Remote Control',
   sentry: '🐛 Sentry',
   shortcutInput: '🎹 Shortcut Input',
   sqlite: '🗄️ SQLite',

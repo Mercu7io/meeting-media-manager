@@ -12,6 +12,7 @@ export * from './jw/sqlite';
 export * from './media';
 export * from './meeting-quick-actions';
 export * from './obs';
+export * from './remote-control';
 export * from './search';
 export * from './settings';
 export * from './timer';

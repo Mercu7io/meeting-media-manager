@@ -1,0 +1,1387 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="theme-color" content="#0d1117" />
+    <title>M³ Remote Control</title>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+    <style>
+      :root {
+        --bg-color: #0d1117;
+        --card-bg: #161b22;
+        --card-border: #30363d;
+        --text-main: #f0f6fc;
+        --text-muted: #8b949e;
+        --primary: #1f6feb;
+        --primary-hover: #388bfd;
+        --primary-light: rgba(56, 139, 253, 0.15);
+        --accent-green: #238636;
+        --accent-red: #da3633;
+        --accent-yellow: #d29922;
+        --radius: 16px;
+        --safe-bottom: env(safe-area-inset-bottom, 16px);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
+      body {
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
+          Arial, sans-serif;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow-x: hidden;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      header {
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--card-border);
+        background: rgba(22, 27, 34, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        font-size: 1.1rem;
+      }
+      .brand svg {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+      }
+      .status-badges {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        transition: all 0.3s ease;
+      }
+      .badge-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+      .connected .badge-dot {
+        background-color: var(--accent-green);
+        box-shadow: 0 0 8px var(--accent-green);
+      }
+      .reconnecting .badge-dot {
+        background-color: var(--accent-yellow);
+        box-shadow: 0 0 8px var(--accent-yellow);
+      }
+      .disconnected .badge-dot {
+        background-color: var(--accent-red);
+        box-shadow: 0 0 8px var(--accent-red);
+      }
+      .badge-blackout {
+        cursor: pointer;
+      }
+      .badge-blackout.active {
+        background: rgba(218, 54, 51, 0.2);
+        border-color: var(--accent-red);
+        color: #ff7b72;
+      }
+      .badge-blackout.visible {
+        background: rgba(35, 134, 54, 0.2);
+        border-color: var(--accent-green);
+        color: #7ee787;
+      }
+
+      main {
+        flex: 1;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        max-width: 600px;
+        width: 100%;
+        margin: 0 auto;
+      }
+
+      .card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius);
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .now-playing-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .media-type-tag {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        padding: 3px 8px;
+        border-radius: 6px;
+        background: var(--primary-light);
+        color: var(--primary-hover);
+        border: 1px solid rgba(56, 139, 253, 0.3);
+      }
+      .media-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        line-height: 1.3;
+        word-break: break-word;
+        color: var(--text-main);
+      }
+      .media-playback-state {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        font-weight: 500;
+      }
+
+      /* Scrubber slider */
+      .scrubber-container {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .slider-track {
+        position: relative;
+        width: 100%;
+        height: 28px;
+        display: flex;
+        align-items: center;
+      }
+      .slider {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 8px;
+        border-radius: 4px;
+        background: #21262d;
+        outline: none;
+        cursor: pointer;
+      }
+      .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--primary-hover);
+        box-shadow: 0 0 10px rgba(56, 139, 253, 0.5);
+        border: 2px solid #ffffff;
+        cursor: pointer;
+        transition: transform 0.1s;
+      }
+      .slider:active::-webkit-slider-thumb {
+        transform: scale(1.2);
+      }
+      .time-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        font-variant-numeric: tabular-nums;
+        color: var(--text-muted);
+        font-weight: 600;
+      }
+
+      /* Transport Controls */
+      .transport-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-evenly;
+        gap: 12px;
+        padding: 8px 0;
+      }
+      .btn-ctrl {
+        background: #21262d;
+        border: 1px solid var(--card-border);
+        color: var(--text-main);
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        outline: none;
+      }
+      .btn-ctrl:active {
+        transform: scale(0.92);
+        background: #30363d;
+      }
+      .btn-ctrl svg {
+        width: 24px;
+        height: 24px;
+        fill: currentColor;
+      }
+      .btn-play-pause {
+        width: 68px;
+        height: 68px;
+        background: var(--primary);
+        border: none;
+        box-shadow: 0 4px 16px rgba(31, 111, 235, 0.4);
+      }
+      .btn-play-pause:active {
+        background: var(--primary-hover);
+      }
+      .btn-play-pause svg {
+        width: 32px;
+        height: 32px;
+      }
+      .btn-blackout {
+        border-radius: 12px;
+        width: auto;
+        padding: 0 16px;
+        height: 48px;
+        gap: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+
+      /* Playlist Section */
+      .playlist-card {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-height: 250px;
+        margin-bottom: var(--safe-bottom);
+      }
+      .playlist-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--card-border);
+      }
+      .playlist-title {
+        font-size: 1rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .playlist-count {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        background: #21262d;
+        padding: 2px 8px;
+        border-radius: 999px;
+      }
+      .btn-icon {
+        background: #21262d;
+        border: 1px solid var(--card-border);
+        color: var(--text-muted);
+        border-radius: 8px;
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn-icon:hover {
+        color: var(--text-main);
+        border-color: var(--primary);
+      }
+      .btn-icon:active {
+        transform: scale(0.92);
+      }
+      .btn-icon svg {
+        width: 18px;
+        height: 18px;
+        fill: currentColor;
+      }
+      .spinning {
+        animation: spin 0.7s linear infinite;
+      }
+      @keyframes spin {
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .playlist-items {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        overflow-y: auto;
+        max-height: 480px;
+        padding-right: 4px;
+      }
+      .playlist-section {
+        border: 1px solid var(--card-border);
+        background: rgba(22, 27, 34, 0.4);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 6px;
+      }
+      .playlist-section-header {
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-main);
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #161b22;
+        cursor: pointer;
+        user-select: none;
+        transition: background 0.2s;
+      }
+      .playlist-section-header:active {
+        background: #21262d;
+      }
+      .section-title-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        flex: 1;
+      }
+      .section-chevron {
+        width: 16px;
+        height: 16px;
+        fill: currentColor;
+        color: var(--text-muted);
+        transition: transform 0.2s ease;
+        flex-shrink: 0;
+      }
+      .playlist-section.collapsed .section-chevron {
+        transform: rotate(-90deg);
+      }
+      .section-title {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 0.82rem;
+        color: #f0f6fc;
+        font-weight: 700;
+      }
+      .section-count {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        background: #0d1117;
+        padding: 2px 7px;
+        border-radius: 999px;
+        margin-left: 6px;
+        flex-shrink: 0;
+      }
+      .playlist-section-content {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 8px;
+        border-top: 1px solid var(--card-border);
+      }
+      .playlist-section.collapsed .playlist-section-content {
+        display: none;
+      }
+
+      .playlist-divider {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        margin: 2px 0;
+        background: #1c2128;
+        border-left: 3px solid #58a6ff;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.78rem;
+        color: #c9d1d9;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        user-select: none;
+      }
+      .playlist-divider-icon {
+        font-size: 0.85rem;
+        opacity: 0.85;
+        flex-shrink: 0;
+      }
+      .playlist-folder {
+        border: 1px solid var(--card-border);
+        background: rgba(22, 27, 34, 0.6);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 4px;
+      }
+      .playlist-folder-header {
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        background: #161b22;
+        user-select: none;
+        transition: background 0.2s;
+      }
+      .playlist-folder-header:active {
+        background: #21262d;
+      }
+      .folder-title-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        flex: 1;
+      }
+      .folder-chevron {
+        width: 16px;
+        height: 16px;
+        fill: currentColor;
+        color: var(--text-muted);
+        transition: transform 0.2s ease;
+        flex-shrink: 0;
+      }
+      .playlist-folder.collapsed .folder-chevron {
+        transform: rotate(-90deg);
+      }
+      .folder-icon {
+        font-size: 0.95rem;
+        flex-shrink: 0;
+      }
+      .folder-title {
+        font-weight: 600;
+        font-size: 0.88rem;
+        color: var(--text-main);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .folder-count {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        background: #0d1117;
+        padding: 2px 7px;
+        border-radius: 999px;
+        margin-left: 6px;
+        flex-shrink: 0;
+      }
+      .playlist-folder-content {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 8px;
+        border-top: 1px solid var(--card-border);
+      }
+      .playlist-folder.collapsed .playlist-folder-content {
+        display: none;
+      }
+      .playlist-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        background: #0d1117;
+        border: 1px solid var(--card-border);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        gap: 12px;
+      }
+      .playlist-item:active {
+        transform: scale(0.98);
+        background: #161b22;
+      }
+      .playlist-item.active {
+        border-color: var(--primary);
+        background: rgba(31, 111, 235, 0.12);
+      }
+      .playlist-item-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+        flex: 1;
+      }
+      .playlist-item-title-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+      .playlist-item-title {
+        font-weight: 600;
+        font-size: 0.92rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .tag-song {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        background: rgba(163, 113, 247, 0.18);
+        color: #d2a8ff;
+        border: 1px solid rgba(163, 113, 247, 0.4);
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 1px 6px;
+        border-radius: 6px;
+        flex-shrink: 0;
+      }
+      .playlist-item-sub {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+      }
+      .playlist-item.active .playlist-item-title {
+        color: var(--primary-hover);
+      }
+      .status-playing-badge {
+        color: var(--primary);
+        font-size: 0.75rem;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+
+      /* PIN Modal */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+      }
+      .modal-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius);
+        padding: 24px;
+        max-width: 360px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        text-align: center;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      }
+      .pin-input {
+        width: 180px;
+        height: 54px;
+        text-align: center;
+        font-size: 2rem;
+        letter-spacing: 0.3em;
+        font-weight: 700;
+        background: #0d1117;
+        border: 2px solid var(--card-border);
+        color: var(--text-main);
+        border-radius: 12px;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      .pin-input:focus {
+        border-color: var(--primary);
+      }
+      .btn-submit {
+        width: 100%;
+        padding: 14px;
+        background: var(--primary);
+        border: none;
+        border-radius: 12px;
+        color: #fff;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+      .btn-submit:active {
+        background: var(--primary-hover);
+      }
+      .pin-error {
+        color: var(--accent-red);
+        font-size: 0.85rem;
+        font-weight: 600;
+        min-height: 20px;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header>
+      <div class="brand">
+        <svg viewBox="0 0 512 512" aria-hidden="true">
+          <rect width="512" height="512" rx="100" fill="#1f6feb" />
+          <rect
+            x="128"
+            y="64"
+            width="256"
+            height="384"
+            rx="36"
+            fill="#161b22"
+          />
+          <polygon points="230,135 295,165 230,195" fill="#58a6ff" />
+        </svg>
+        <span>M³ Remote</span>
+      </div>
+      <div class="status-badges">
+        <div
+          id="blackoutBadge"
+          class="badge badge-blackout visible"
+          title="Toggle Blank Screen"
+        >
+          <span id="blackoutBadgeText">Screen ON</span>
+        </div>
+        <div id="connBadge" class="badge disconnected">
+          <span class="badge-dot"></span>
+          <span id="connBadgeText">Offline</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- PIN Modal -->
+    <div id="pinModal" class="modal-overlay" hidden>
+      <div class="modal-card">
+        <svg
+          width="48"
+          height="48"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#58a6ff"
+          stroke-width="2"
+        >
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+        <h2>Pairing Required</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem">
+          Enter the 4-digit PIN displayed on Meeting Media Manager desktop.
+        </p>
+        <input
+          id="pinInput"
+          class="pin-input"
+          type="password"
+          pattern="[0-9]*"
+          inputmode="numeric"
+          maxlength="6"
+          placeholder="••••"
+        />
+        <div id="pinError" class="pin-error"></div>
+        <button id="pinSubmitBtn" class="btn-submit" type="button">
+          Connect
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <main>
+      <!-- Now Playing Card -->
+      <div class="card">
+        <div class="now-playing-header">
+          <div>
+            <span id="mediaTypeTag" class="media-type-tag">IDLE</span>
+            <div
+              id="mediaPlaybackState"
+              class="media-playback-state"
+              style="margin-top: 4px"
+            >
+              No media active
+            </div>
+          </div>
+        </div>
+        <div id="mediaTitle" class="media-title">Nothing playing</div>
+
+        <!-- Scrubber -->
+        <div class="scrubber-container">
+          <div class="slider-track">
+            <input
+              id="seekBar"
+              class="slider"
+              type="range"
+              min="0"
+              max="100"
+              value="0"
+              step="0.1"
+              disabled
+            />
+          </div>
+          <div class="time-labels">
+            <span id="currentTimeLabel">0:00</span>
+            <span id="durationLabel">0:00</span>
+          </div>
+        </div>
+
+        <!-- Transport Controls -->
+        <div class="transport-bar">
+          <button
+            id="btnPrev"
+            class="btn-ctrl"
+            type="button"
+            aria-label="Previous Item"
+            title="Previous Item"
+          >
+            <svg viewBox="0 0 24 24">
+              <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" />
+            </svg>
+          </button>
+          <button
+            id="btnPlayPause"
+            class="btn-ctrl btn-play-pause"
+            type="button"
+            aria-label="Play / Pause"
+            title="Play or Pause"
+          >
+            <svg id="iconPlay" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            <svg id="iconPause" viewBox="0 0 24 24" hidden>
+              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+            </svg>
+          </button>
+          <button
+            id="btnStop"
+            class="btn-ctrl"
+            type="button"
+            aria-label="Stop Media"
+            title="Stop"
+          >
+            <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z" /></svg>
+          </button>
+          <button
+            id="btnNext"
+            class="btn-ctrl"
+            type="button"
+            aria-label="Next Item"
+            title="Next Item"
+          >
+            <svg viewBox="0 0 24 24">
+              <path d="m6 18 8.5-6L6 6v12zM16 6v12h2V6h-2z" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Blackout button -->
+        <div style="display: flex; justify-content: center; margin-top: 4px">
+          <button
+            id="btnBlackoutToggle"
+            class="btn-ctrl btn-blackout"
+            type="button"
+          >
+            <svg viewBox="0 0 24 24" style="width: 20px; height: 20px">
+              <path
+                d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"
+              />
+            </svg>
+            <span id="blackoutBtnLabel">Blank Screen</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Playlist Card -->
+      <div class="card playlist-card">
+        <div class="playlist-header">
+          <div class="playlist-title">
+            <span>Today's Media Queue</span>
+            <span id="playlistCount" class="playlist-count">0</span>
+          </div>
+          <button
+            id="btnRefreshPlaylist"
+            class="btn-icon"
+            type="button"
+            aria-label="Refresh Queue"
+            title="Refresh Queue"
+          >
+            <svg id="iconRefresh" viewBox="0 0 24 24">
+              <path
+                d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"
+              />
+            </svg>
+          </button>
+        </div>
+        <div id="playlistItems" class="playlist-items">
+          <div
+            style="
+              color: var(--text-muted);
+              font-size: 0.9rem;
+              text-align: center;
+              padding: 24px 0;
+            "
+          >
+            No items in queue
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      (function () {
+        'use strict';
+
+        // State
+        let socket = null;
+        let authenticated = false;
+        let currentPin = '';
+        let reconnectAttempts = 0;
+        let reconnectTimer = null;
+        let currentState = null;
+        let isUserSeeking = false;
+
+        // Extract PIN from URL query param if present
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('pin')) {
+          currentPin = urlParams.get('pin') || '';
+        }
+
+        // DOM Elements
+        const connBadge = document.getElementById('connBadge');
+        const connBadgeText = document.getElementById('connBadgeText');
+        const blackoutBadge = document.getElementById('blackoutBadge');
+        const blackoutBadgeText = document.getElementById('blackoutBadgeText');
+        const pinModal = document.getElementById('pinModal');
+        const pinInput = document.getElementById('pinInput');
+        const pinError = document.getElementById('pinError');
+        const pinSubmitBtn = document.getElementById('pinSubmitBtn');
+
+        const mediaTypeTag = document.getElementById('mediaTypeTag');
+        const mediaPlaybackState =
+          document.getElementById('mediaPlaybackState');
+        const mediaTitle = document.getElementById('mediaTitle');
+        const seekBar = document.getElementById('seekBar');
+        const currentTimeLabel = document.getElementById('currentTimeLabel');
+        const durationLabel = document.getElementById('durationLabel');
+
+        const btnPrev = document.getElementById('btnPrev');
+        const btnPlayPause = document.getElementById('btnPlayPause');
+        const iconPlay = document.getElementById('iconPlay');
+        const iconPause = document.getElementById('iconPause');
+        const btnStop = document.getElementById('btnStop');
+        const btnNext = document.getElementById('btnNext');
+        const btnBlackoutToggle = document.getElementById('btnBlackoutToggle');
+        const blackoutBtnLabel = document.getElementById('blackoutBtnLabel');
+
+        const playlistCount = document.getElementById('playlistCount');
+        const playlistItems = document.getElementById('playlistItems');
+        const btnRefreshPlaylist =
+          document.getElementById('btnRefreshPlaylist');
+        const iconRefresh = document.getElementById('iconRefresh');
+
+        const collapsedFolders = new Set();
+        const collapsedSections = new Set();
+
+        function formatTime(seconds) {
+          if (!seconds || isNaN(seconds) || seconds < 0) return '0:00';
+          const sec = Math.floor(seconds);
+          const mins = Math.floor(sec / 60);
+          const remSecs = sec % 60;
+          return `${mins}:${remSecs < 10 ? '0' : ''}${remSecs}`;
+        }
+
+        function vibrate() {
+          if ('vibrate' in navigator) {
+            try {
+              navigator.vibrate(15);
+            } catch (e) {}
+          }
+        }
+
+        function updateConnectionStatus(status) {
+          connBadge.className = 'badge ' + status;
+          if (status === 'connected') {
+            connBadgeText.textContent = 'Live';
+          } else if (status === 'reconnecting') {
+            connBadgeText.textContent = 'Connecting...';
+          } else {
+            connBadgeText.textContent = 'Offline';
+          }
+        }
+
+        function sendCommand(action) {
+          vibrate();
+          if (!socket || socket.readyState !== WebSocket.OPEN) return;
+          socket.send(JSON.stringify({ type: 'action', action: action }));
+        }
+
+        function connect() {
+          if (socket) {
+            try {
+              socket.close();
+            } catch (e) {}
+          }
+
+          updateConnectionStatus('reconnecting');
+          const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+          const wsUrl =
+            `${proto}//${location.host}/ws` +
+            (currentPin ? `?pin=${encodeURIComponent(currentPin)}` : '');
+
+          socket = new WebSocket(wsUrl);
+
+          socket.onopen = function () {
+            reconnectAttempts = 0;
+            if (currentPin) {
+              socket.send(JSON.stringify({ type: 'auth', pin: currentPin }));
+            }
+          };
+
+          socket.onmessage = function (event) {
+            try {
+              const msg = JSON.parse(event.data);
+              handleMessage(msg);
+            } catch (e) {
+              console.error('Invalid message from server', e);
+            }
+          };
+
+          socket.onclose = function () {
+            updateConnectionStatus('disconnected');
+            authenticated = false;
+            scheduleReconnect();
+          };
+
+          socket.onerror = function () {
+            updateConnectionStatus('disconnected');
+          };
+        }
+
+        function scheduleReconnect() {
+          if (reconnectTimer) clearTimeout(reconnectTimer);
+          const delay = Math.min(
+            1000 * Math.pow(1.5, reconnectAttempts),
+            10000,
+          );
+          reconnectAttempts++;
+          reconnectTimer = setTimeout(connect, delay);
+        }
+
+        function handleMessage(msg) {
+          switch (msg.type) {
+            case 'auth_required':
+              authenticated = false;
+              pinModal.hidden = false;
+              pinError.textContent = msg.message || '';
+              break;
+
+            case 'auth_success':
+              authenticated = true;
+              pinModal.hidden = true;
+              pinError.textContent = '';
+              updateConnectionStatus('connected');
+              break;
+
+            case 'auth_error':
+              authenticated = false;
+              pinModal.hidden = false;
+              pinError.textContent = msg.message || 'Invalid PIN';
+              break;
+
+            case 'state_change':
+              renderState(msg.data);
+              break;
+          }
+        }
+
+        function renderState(state) {
+          if (!state) return;
+          currentState = state;
+          updateConnectionStatus('connected');
+
+          // Blackout / Window visibility
+          const isScreenVisible = !!state.mediaWindowVisible;
+          if (isScreenVisible) {
+            blackoutBadge.className = 'badge badge-blackout visible';
+            blackoutBadgeText.textContent = 'Screen ON';
+            blackoutBtnLabel.textContent = 'Blank Screen';
+          } else {
+            blackoutBadge.className = 'badge badge-blackout active';
+            blackoutBadgeText.textContent = 'BLACKOUT';
+            blackoutBtnLabel.textContent = 'Show Screen';
+          }
+
+          // Title and media type
+          mediaTitle.textContent = state.title || 'Nothing playing';
+          mediaTypeTag.textContent = (state.mediaType || 'IDLE').toUpperCase();
+
+          // Playback state
+          if (state.isPlaying) {
+            mediaPlaybackState.textContent = 'Playing';
+            iconPlay.hidden = true;
+            iconPause.hidden = false;
+          } else if (state.isPaused) {
+            mediaPlaybackState.textContent = 'Paused';
+            iconPlay.hidden = false;
+            iconPause.hidden = true;
+          } else {
+            mediaPlaybackState.textContent = 'Stopped';
+            iconPlay.hidden = false;
+            iconPause.hidden = true;
+          }
+
+          // Seek slider
+          const duration = state.duration || 0;
+          const currentPos = state.currentPosition || 0;
+
+          if (!isUserSeeking) {
+            seekBar.max = duration > 0 ? duration : 100;
+            seekBar.value = currentPos;
+            seekBar.disabled = duration <= 0;
+            currentTimeLabel.textContent = formatTime(currentPos);
+            durationLabel.textContent = formatTime(duration);
+          }
+
+          // Playlist
+          renderPlaylist(state.playlist || [], state.uniqueId);
+        }
+
+        function createPlaylistItemElement(item, isActive) {
+          const el = document.createElement('div');
+          el.className = 'playlist-item' + (isActive ? ' active' : '');
+
+          const typeTag = item.isVideo
+            ? 'Video'
+            : item.isAudio
+              ? 'Audio'
+              : item.isImage
+                ? 'Image'
+                : 'Media';
+          const durationStr = item.duration ? formatTime(item.duration) : '';
+          const songTag = item.songNumber
+            ? `<span class="tag-song">🎵 #${escapeHtml(String(item.songNumber))}</span>`
+            : '';
+
+          el.innerHTML = `
+          <div class="playlist-item-info">
+            <div class="playlist-item-title-row">
+              ${songTag}
+              <span class="playlist-item-title">${escapeHtml(item.title || 'Untitled')}</span>
+            </div>
+            <div class="playlist-item-sub">
+              <span>${typeTag}</span>
+              ${durationStr ? `<span>•</span><span>${durationStr}</span>` : ''}
+            </div>
+          </div>
+          ${isActive ? '<span class="status-playing-badge">PLAYING</span>' : ''}
+        `;
+
+          el.addEventListener('click', function () {
+            if (currentState) {
+              currentState.isPlaying = true;
+              currentState.isPaused = false;
+              currentState.uniqueId = item.uniqueId;
+              iconPlay.hidden = true;
+              iconPause.hidden = false;
+              mediaPlaybackState.textContent = 'Playing';
+              mediaTitle.textContent = item.title || 'Playing';
+            }
+            sendCommand({
+              type: 'select_item',
+              uniqueId: item.uniqueId,
+              play: true,
+            });
+          });
+
+          return el;
+        }
+
+        function renderPlaylist(playlist, activeUniqueId) {
+          const playableItems = (playlist || []).filter(function (it) {
+            return !it.isDivider;
+          });
+          playlistCount.textContent = playableItems.length.toString();
+
+          if (!playlist || playlist.length === 0) {
+            playlistItems.innerHTML =
+              '<div style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 24px 0;">No items in queue</div>';
+            return;
+          }
+
+          // If the active item is in a collapsed folder or section, expand them so it is visible
+          if (activeUniqueId) {
+            playlist.forEach(function (it) {
+              if (it.uniqueId === activeUniqueId) {
+                if (it.groupId) collapsedFolders.delete(it.groupId);
+                const secKey = it.sectionId || it.section;
+                if (secKey) collapsedSections.delete(secKey);
+              }
+            });
+          }
+
+          playlistItems.innerHTML = '';
+
+          // Group items by section
+          const sectionsMap = new Map();
+          playlist.forEach(function (item) {
+            const secKey = item.sectionId || item.section || 'General';
+            const secTitle = item.section || 'General';
+            if (!sectionsMap.has(secKey)) {
+              sectionsMap.set(secKey, { items: [], title: secTitle });
+            }
+            sectionsMap.get(secKey).items.push(item);
+          });
+
+          sectionsMap.forEach(function (secData, secKey) {
+            const secPlayableCount = secData.items.filter(function (i) {
+              return !i.isDivider;
+            }).length;
+
+            const sectionContainer = document.createElement('div');
+            const isSectionCollapsed = collapsedSections.has(secKey);
+            sectionContainer.className =
+              'playlist-section' + (isSectionCollapsed ? ' collapsed' : '');
+
+            const sectionHeader = document.createElement('div');
+            sectionHeader.className = 'playlist-section-header';
+            sectionHeader.innerHTML = `
+            <div class="section-title-row">
+              <svg class="section-chevron" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+              <span class="section-title">${escapeHtml(secData.title)}</span>
+              <span class="section-count">${secPlayableCount}</span>
+            </div>
+          `;
+
+            sectionHeader.addEventListener('click', function () {
+              if (collapsedSections.has(secKey)) {
+                collapsedSections.delete(secKey);
+                sectionContainer.classList.remove('collapsed');
+              } else {
+                collapsedSections.add(secKey);
+                sectionContainer.classList.add('collapsed');
+              }
+            });
+
+            const sectionContent = document.createElement('div');
+            sectionContent.className = 'playlist-section-content';
+
+            let currentFolderId = null;
+            let currentFolderContent = null;
+            let folderItemCount = 0;
+            let folderCountBadge = null;
+
+            secData.items.forEach(function (item) {
+              // Divider
+              if (item.isDivider) {
+                currentFolderId = null;
+                const divEl = document.createElement('div');
+                divEl.className = 'playlist-divider';
+                divEl.innerHTML = `
+                <span class="playlist-divider-icon">🏷️</span>
+                <span>${escapeHtml(item.title || 'Divider')}</span>
+              `;
+                sectionContent.appendChild(divEl);
+                return;
+              }
+
+              const isActive = item.uniqueId === activeUniqueId;
+
+              // Foldable folder / group handling
+              if (item.groupId) {
+                if (item.groupId !== currentFolderId) {
+                  currentFolderId = item.groupId;
+                  folderItemCount = 0;
+
+                  const folderContainer = document.createElement('div');
+                  const isCollapsed = collapsedFolders.has(item.groupId);
+                  folderContainer.className =
+                    'playlist-folder' + (isCollapsed ? ' collapsed' : '');
+
+                  const folderHeader = document.createElement('div');
+                  folderHeader.className = 'playlist-folder-header';
+                  folderHeader.innerHTML = `
+                  <div class="folder-title-row">
+                    <svg class="folder-chevron" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                    <span class="folder-icon">📁</span>
+                    <span class="folder-title">${escapeHtml(item.groupTitle || 'Folder')}</span>
+                    <span class="folder-count">0</span>
+                  </div>
+                `;
+
+                  const countBadge =
+                    folderHeader.querySelector('.folder-count');
+                  folderCountBadge = countBadge;
+
+                  const folderContent = document.createElement('div');
+                  folderContent.className = 'playlist-folder-content';
+                  currentFolderContent = folderContent;
+
+                  folderHeader.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    if (collapsedFolders.has(item.groupId)) {
+                      collapsedFolders.delete(item.groupId);
+                      folderContainer.classList.remove('collapsed');
+                    } else {
+                      collapsedFolders.add(item.groupId);
+                      folderContainer.classList.add('collapsed');
+                    }
+                  });
+
+                  folderContainer.appendChild(folderHeader);
+                  folderContainer.appendChild(folderContent);
+                  sectionContent.appendChild(folderContainer);
+                }
+
+                folderItemCount++;
+                if (folderCountBadge) {
+                  folderCountBadge.textContent = folderItemCount.toString();
+                }
+
+                const el = createPlaylistItemElement(item, isActive);
+                currentFolderContent.appendChild(el);
+              } else {
+                currentFolderId = null;
+                const el = createPlaylistItemElement(item, isActive);
+                sectionContent.appendChild(el);
+              }
+            });
+
+            sectionContainer.appendChild(sectionHeader);
+            sectionContainer.appendChild(sectionContent);
+            playlistItems.appendChild(sectionContainer);
+          });
+        }
+
+        function escapeHtml(text) {
+          const div = document.createElement('div');
+          div.textContent = text;
+          return div.innerHTML;
+        }
+
+        // Event Listeners for Controls with optimistic UI feedback
+        btnPlayPause.addEventListener('click', function () {
+          if (!currentState) {
+            sendCommand({ type: 'play' });
+            return;
+          }
+          if (currentState.isPlaying) {
+            currentState.isPlaying = false;
+            currentState.isPaused = true;
+            iconPlay.hidden = false;
+            iconPause.hidden = true;
+            mediaPlaybackState.textContent = 'Paused';
+            sendCommand({ type: 'pause' });
+          } else {
+            currentState.isPlaying = true;
+            currentState.isPaused = false;
+            iconPlay.hidden = true;
+            iconPause.hidden = false;
+            mediaPlaybackState.textContent = 'Playing';
+            sendCommand({ type: 'play' });
+          }
+        });
+
+        btnStop.addEventListener('click', function () {
+          if (currentState) {
+            currentState.isPlaying = false;
+            currentState.isPaused = false;
+            currentState.isStopped = true;
+            iconPlay.hidden = false;
+            iconPause.hidden = true;
+            mediaPlaybackState.textContent = 'Stopped';
+          }
+          sendCommand({ type: 'stop' });
+        });
+
+        btnRefreshPlaylist.addEventListener('click', function () {
+          iconRefresh.classList.add('spinning');
+          setTimeout(function () {
+            iconRefresh.classList.remove('spinning');
+          }, 700);
+          sendCommand({ type: 'refresh_playlist' });
+        });
+
+        btnPrev.addEventListener('click', function () {
+          sendCommand({ type: 'previous' });
+        });
+        btnNext.addEventListener('click', function () {
+          sendCommand({ type: 'next' });
+        });
+        btnBlackoutToggle.addEventListener('click', function () {
+          sendCommand({ type: 'toggle_blackout' });
+        });
+        blackoutBadge.addEventListener('click', function () {
+          sendCommand({ type: 'toggle_blackout' });
+        });
+
+        // Seek Slider interaction
+        seekBar.addEventListener('input', function () {
+          isUserSeeking = true;
+          currentTimeLabel.textContent = formatTime(Number(seekBar.value));
+        });
+
+        seekBar.addEventListener('change', function () {
+          const targetPos = Number(seekBar.value);
+          sendCommand({ type: 'seek', position: targetPos });
+          setTimeout(function () {
+            isUserSeeking = false;
+          }, 300);
+        });
+
+        // PIN submission
+        function submitPin() {
+          const pin = pinInput.value.trim();
+          if (!pin) {
+            pinError.textContent = 'Please enter a PIN';
+            return;
+          }
+          currentPin = pin;
+          if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: 'auth', pin: pin }));
+          } else {
+            connect();
+          }
+        }
+
+        pinSubmitBtn.addEventListener('click', submitPin);
+        pinInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') submitPin();
+        });
+
+        // Start initial connection
+        connect();
+      })();
+    </script>
+  </body>
+</html>

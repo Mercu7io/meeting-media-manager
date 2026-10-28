@@ -4,6 +4,13 @@
 
 For translations of the most important changes, see the [`./release-notes/`](./release-notes/) directory.
 
+## UPCOMING VERSION
+
+### ✨ New Features
+
+- ✨ **Remote Control Server & Mobile PWA**: M³ now includes a built-in, lightweight HTTP/WebSocket remote control server and mobile-friendly web controller PWA. Users on the local network (LAN) can connect their smartphone or tablet to monitor playback status, trigger presentation controls (play, pause, stop, previous, next, blackout toggle, seek), and browse or activate items from the meeting queue. The feature includes optional 4-digit PIN authentication, pairing QR code display in the Action Island popup and Settings, and graceful auto-reconnection.
+- 🛠️ **Remote Control Enhancements**: The mobile remote control now executes `stop` commands directly on playing media without triggering blocking desktop confirmation dialogs. Play and pause controls give instant visual feedback with optimistic icon transitions. The media queue features collapsible meeting sections with item count badges, divider banners (`🏷️`), collapsible folder groups (`MediaGroup`), song number tags (`🎵 #X`), and a one-tap queue refresh button.
+
 ## v26.10.2
 
 ### ✨ New Features

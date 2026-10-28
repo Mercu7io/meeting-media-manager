@@ -15,6 +15,7 @@
         <ObsStatus v-model="obsPopup" />
         <RecordingStatus v-model="recordingPopup" />
         <TimerButton v-model="timerPopup" />
+        <RemoteControlButton v-model="remoteControlPopup" />
         <q-separator class="bg-semi-white-24" vertical />
         <MediaDisplayButton v-model="displayPopup" />
         <ZoomMeetingManagerButton v-model="zoomMeetingManagerPopup" />
@@ -26,6 +27,10 @@
       <DialogDisplayPopup v-model="displayPopup" dialog-id="display-popup" />
       <DialogZoomMeetingManagerPopup v-model="zoomMeetingManagerPopup" />
       <DialogTimerPopup v-model="timerPopup" dialog-id="timer-popup" />
+      <DialogRemoteControlPopup
+        v-model="remoteControlPopup"
+        dialog-id="remote-control-popup"
+      />
     </q-chip>
   </div>
 </template>
@@ -37,6 +42,7 @@ import MediaDisplayButton from 'components/media/MediaDisplayButton.vue';
 import MusicButton from 'components/media/MusicButton.vue';
 import ObsStatus from 'components/media/ObsStatus.vue';
 import RecordingStatus from 'components/media/RecordingStatus.vue';
+import RemoteControlButton from 'components/media/RemoteControlButton.vue';
 import SubtitlesButton from 'components/media/SubtitlesButton.vue';
 import TimerButton from 'components/media/TimerButton.vue';
 import ZoomMeetingManagerButton from 'components/media/ZoomMeetingManagerButton.vue';
@@ -47,6 +53,7 @@ import DialogDisplayPopup from '../dialog/DialogDisplayPopup.vue';
 import DialogDownloadsPopup from '../dialog/DialogDownloadsPopup.vue';
 import DialogObsPopup from '../dialog/DialogObsPopup.vue';
 import DialogRecordingPopup from '../dialog/DialogRecordingPopup.vue';
+import DialogRemoteControlPopup from '../dialog/DialogRemoteControlPopup.vue';
 import DialogTimerPopup from '../dialog/DialogTimerPopup.vue';
 import DialogZoomMeetingManagerPopup from '../dialog/DialogZoomMeetingManagerPopup.vue';
 
@@ -58,6 +65,7 @@ const recordingPopup = ref(false);
 const displayPopup = ref(false);
 const zoomMeetingManagerPopup = ref(false);
 const timerPopup = ref(false);
+const remoteControlPopup = ref(false);
 
 const popups = {
   displayPopup,
@@ -65,6 +73,7 @@ const popups = {
   musicPopup,
   obsPopup,
   recordingPopup,
+  remoteControlPopup,
   timerPopup,
   zoomMeetingManagerPopup,
 } as const;

@@ -30,6 +30,12 @@ import type {
   resolve,
 } from 'upath';
 
+import type {
+  RemoteControlAction,
+  RemoteControlStartOptions,
+  RemoteControlState,
+  RemoteControlStatus,
+} from './remote-control';
 import type { TimerData } from './timer';
 
 export interface ConversionOptions {
@@ -190,6 +196,7 @@ export interface ElectronApi {
    * time. Null if there's no media window (or it's been destroyed).
    */
   getMediaWindowCaptureSourceId: () => Promise<null | string>;
+  getRemoteControlStatus: () => Promise<RemoteControlStatus>;
   getScreenAccessStatus: () => Promise<MediaAccessStatus>;
   getSharedDataPath: () => Promise<null | string>;
   /**
@@ -303,6 +310,9 @@ export interface ElectronApi {
     callback: (args: { reloading: boolean }) => void,
   ) => void;
   onPathProbeNetworkWarning: (callback: () => void) => void;
+  onRemoteControlAction: (
+    callback: (action: RemoteControlAction) => void,
+  ) => () => void;
   onShortcut: (
     callback: (args: { shortcut: keyof SettingsValues }) => void,
   ) => void;
@@ -340,6 +350,7 @@ export interface ElectronApi {
     params?: string,
   ) => void;
   openExternal: (website: ExternalWebsite) => void;
+  openExternalUrl: (url: string) => void;
   openFileDialog: (
     single?: boolean,
     filter?: FileDialogFilter,
@@ -401,6 +412,7 @@ export interface ElectronApi {
    * @param modifiers Modifier keys to hold while tapping.
    */
   sendKeyTap: (key: string, modifiers?: string[]) => void;
+  sendRemoteControlStateUpdate: (state: RemoteControlState) => void;
   setAutoStartAtLogin: (value: boolean) => void;
   setElectronUrlVariables: (variables: string) => void;
   /**
@@ -414,9 +426,13 @@ export interface ElectronApi {
   setHardwareAcceleration: (disabled: boolean) => void;
   setPathProbeNotificationPaths: (paths: string[]) => void;
   showFileOnWindows: (filePath: string) => Promise<void>;
+  startRemoteControl: (
+    options?: RemoteControlStartOptions,
+  ) => Promise<RemoteControlStatus>;
   /** Serves the read-only timer page on the local network. */
   startTimerRemote: (port: number) => Promise<TimerRemoteStatus>;
   startZoomHelper: () => Promise<ZoomHelperStartResult>;
+  stopRemoteControl: () => Promise<void>;
   stopTimerRemote: () => void;
   stopZoomHelper: () => void;
   /** The timer page's few words, in M3's language. */
@@ -533,6 +549,7 @@ export type ElectronIpcInvokeKey =
   | 'getLowDiskSpaceStatus'
   | 'getMediaWindowCaptureSize'
   | 'getMediaWindowCaptureSourceId'
+  | 'getRemoteControlStatus'
   | 'getScreenAccessStatus'
   | 'getSharedDataPath'
   | 'getUpdaterState'
@@ -554,9 +571,11 @@ export type ElectronIpcInvokeKey =
   | 'saveFileDialog'
   | 'set-hardware-acceleration'
   | 'setExecutable'
+  | 'startRemoteControl'
   | 'startSecurityScopedAccess'
   | 'startTimerRemote'
   | 'startZoomHelper'
+  | 'stopRemoteControl'
   | 'unwatchFolders'
   | 'unzip'
   | 'watchFolder'
@@ -577,6 +596,7 @@ export type ElectronIpcListenKey =
   | 'log'
   | 'media-window-renderer-gone'
   | 'pathProbeNetworkWarning'
+  | 'remote-control:action'
   | 'screenChange'
   | 'screenPrefsChange'
   | 'setShouldQuit'
@@ -609,9 +629,11 @@ export type ElectronIpcSendKey =
   | 'navigateWebsiteWindow'
   | 'openDiscussion'
   | 'openExternal'
+  | 'openExternalUrl'
   | 'pauseAllDownloads'
   | 'quitAndInstall'
   | 'relaunchApp'
+  | 'remote-control:state-update'
   | 'resumeAllDownloads'
   | 'setElectronUrlVariables'
   | 'setPathProbeNotificationPaths'

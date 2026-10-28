@@ -204,6 +204,7 @@ export type SettingsItemSubgroup =
   | 'pinyin'
   | 'playback'
   | 'quickActions'
+  | 'remoteControl'
   | 'setupWizard'
   | 'setupWizard.backgroundMusic'
   | 'specialDates'
@@ -263,6 +264,7 @@ export interface SettingsValues {
   enableMusicButton: boolean;
   enablePinyinSongs: boolean;
   enablePlaybackSpeedControl: boolean;
+  enableRemoteControl: boolean;
   enableSubtitles: boolean;
   enableTimerDisplay: boolean;
   excludeCbsPubs: string[];
@@ -314,6 +316,9 @@ export interface SettingsValues {
   recordingStartShortcut: null | string;
   recordingStopShortcut: null | string;
   relinkCongregationButton: boolean;
+  remoteControlPin: string;
+  remoteControlPort: null | string;
+  remoteControlRequirePin: boolean;
   resetFeatureSuggestions: null;
   reSyncMeetingScheduleButton: boolean;
   shortcutMediaNext: null | string;

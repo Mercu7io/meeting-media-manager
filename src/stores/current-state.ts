@@ -131,6 +131,10 @@ interface Store {
    */
   pendingSectionImports: MediaSectionIdentifier[];
   pinyinActive: boolean;
+  remoteControlClientCount: number;
+  remoteControlPin: string;
+  remoteControlRunning: boolean;
+  remoteControlUrls: string[];
   selectedDate: string;
   /** Where the timer remote page can be opened, while it's served. */
   timerRemoteUrls: string[];
@@ -375,6 +379,19 @@ export const useCurrentStateStore = defineStore('current-state', {
       await this.syncZoomHelper();
 
       return this.getInvalidSettings(newCongregation).length > 0;
+    },
+    setRemoteControlStatus(status: {
+      clientCount?: number;
+      pin?: string;
+      running?: boolean;
+      urls?: string[];
+    }) {
+      if (status.running !== undefined)
+        this.remoteControlRunning = status.running;
+      if (status.urls !== undefined) this.remoteControlUrls = status.urls;
+      if (status.pin !== undefined) this.remoteControlPin = status.pin;
+      if (status.clientCount !== undefined)
+        this.remoteControlClientCount = status.clientCount;
     },
     setTimerRemoteUrls(urls: string[]) {
       this.timerRemoteUrls = urls;
@@ -705,6 +722,10 @@ export const useCurrentStateStore = defineStore('current-state', {
       onlyShowInvalidSettings: false,
       pendingSectionImports: [],
       pinyinActive: false,
+      remoteControlClientCount: 0,
+      remoteControlPin: '',
+      remoteControlRunning: false,
+      remoteControlUrls: [],
       selectedDate: formatDate(new Date(), 'YYYY/MM/DD'),
       timerRemoteUrls: [],
       timerWindowVisible: false,

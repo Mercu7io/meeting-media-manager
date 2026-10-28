@@ -5,6 +5,15 @@
 
 # Meeting Media Manager (M³)
 
+> [!IMPORTANT]
+> **This repository is a fork of [`sircharlo/meeting-media-manager`](https://github.com/sircharlo/meeting-media-manager)** featuring a built-in **HTTP/WebSocket Remote Control Server and mobile-friendly Web Controller (PWA)**.
+>
+> 📱 **Key enhancement in this fork:**
+>
+> - **Wireless LAN Remote Control**: Monitor playback status and trigger presentation controls (Play/Pause, Stop, Next/Previous, Seek, Blackout toggle) from any smartphone or tablet on your local Wi-Fi.
+> - **Zero app installation required on mobile**: Operates directly in modern mobile browsers as a standalone PWA.
+> - **Quick QR code pairing & optional PIN security**: Scan the pairing QR code from M³'s interface to connect instantly.
+
 ## Overview
 
 **Meeting Media Manager (M³)** is a cross‑platform app that automatically downloads and helps present pictures, videos, and audio files for congregation meetings of Jehovah's Witnesses, in any language available on the official website of Jehovah's Witnesses.
@@ -20,6 +29,7 @@ Here are the links to download M³ and access its documentation:
 
 - **Automatic media management**: Download, organize, and keep meeting media up to date.
 - **Media presentation tools**: Thumbnails, playback controls, timers, and external monitor handling.
+- **Remote control PWA**: Monitor status and trigger playback or queue navigation from any smartphone or tablet on the local network.
 - **Hybrid meetings support**: Built-in integrations for Zoom screen sharing and OBS Studio scene switching.
 - **Cross‑platform**: Optimized for Windows, macOS, and Linux.
 - **Multilingual**: App UI available in many languages; media can be downloaded in any language available on the official website of Jehovah's Witnesses.
@@ -52,6 +62,7 @@ For **hybrid** or **in-person** congregation meetings, the integrated media pres
 - Intuitive drag-and-drop sorting of media items
 - Background music playback with automatic stop before scheduled meetings
 - Automatic external monitor recognition and management
+- Built-in LAN remote control server and mobile PWA with PIN authentication and QR code pairing for phone/tablet control
 - Zoom screen sharing integration
 - OBS Studio integration with automatic scene switching
 - Ability to present the official website of Jehovah's Witnesses on external monitors

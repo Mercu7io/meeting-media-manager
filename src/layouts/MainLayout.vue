@@ -158,6 +158,11 @@ import {
   createTemporaryNotification,
   notifyDiskFull,
 } from 'src/helpers/notifications';
+import {
+  broadcastRemoteControlState,
+  initRemoteControl,
+  syncRemoteControl,
+} from 'src/helpers/remote-control';
 import { syncTimerRemote } from 'src/helpers/timer-remote';
 import { createWatchFolderEventQueue } from 'src/helpers/watch-folder-event-queue';
 import { cancelZoomRun, stopZoomSharingAfterMedia } from 'src/helpers/zoom';
@@ -1213,6 +1218,7 @@ onMounted(() => {
     showCongregationSwitcher();
   }
   initListeners();
+  initRemoteControl();
   globalThis.addEventListener('autoUpdatesToggled', handleAutoUpdatesToggled);
 });
 
@@ -1839,6 +1845,38 @@ watchImmediate(
   ],
   () => {
     void syncTimerRemote();
+  },
+);
+
+// Serve the remote control server whenever enabled, stop otherwise.
+watchImmediate(
+  () => [
+    currentCongregation.value,
+    currentSettings.value?.enableRemoteControl,
+    currentSettings.value?.remoteControlPort,
+    currentSettings.value?.remoteControlRequirePin,
+    currentSettings.value?.remoteControlPin,
+  ],
+  () => {
+    void syncRemoteControl();
+  },
+);
+
+// Broadcast state to remote control clients whenever playback state changes.
+watch(
+  () => [
+    currentState.mediaPlaying.action,
+    currentState.mediaPlaying.currentPosition,
+    currentState.mediaPlaying.duration,
+    currentState.mediaPlaying.uniqueId,
+    currentState.mediaPlaying.url,
+    currentState.mediaWindowVisible,
+    currentState.selectedDate,
+  ],
+  () => {
+    if (currentState.remoteControlRunning) {
+      broadcastRemoteControlState();
+    }
   },
 );
 
