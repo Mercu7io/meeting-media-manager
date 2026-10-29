@@ -959,9 +959,10 @@ export const startSharingMediaInZoom = async (
   });
   if (result.ok) {
     const zoomState = useZoomStateStore();
-    if (zoomState.meeting) {
-      zoomState.meeting.sharing = true;
-    }
+    zoomState.setMeeting({
+      ...(zoomState.meeting ?? { found: true }),
+      sharing: true,
+    });
     if (result.changed) notifyInfo('zoom-sharing', 'zoom-sharing-started');
   } else if (result.error !== CANCELLED.error) {
     // A cancel already says so itself.
@@ -978,10 +979,12 @@ export const startSharingMediaInZoom = async (
 export const stopSharingMediaInZoom = async () => {
   const result = await runCommand({ type: 'stop-share' });
   if (result.ok) {
+    mediaShareStartedByM3 = false;
     const zoomState = useZoomStateStore();
-    if (zoomState.meeting) {
-      zoomState.meeting.sharing = false;
-    }
+    zoomState.setMeeting({
+      ...(zoomState.meeting ?? { found: true }),
+      sharing: false,
+    });
     if (result.changed) notifyInfo('zoom-sharing', 'zoom-sharing-stopped');
   } else if (result.error !== CANCELLED.error) {
     notifyFailure('zoom-sharing', 'zoom-sharing-stop-failed');

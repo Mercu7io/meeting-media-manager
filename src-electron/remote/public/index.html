@@ -204,6 +204,9 @@
         justify-content: center;
         border: 1px solid var(--card-border);
       }
+      .now-playing-art-wrap[hidden] {
+        display: none !important;
+      }
       .now-playing-art {
         width: 100%;
         height: auto;
@@ -400,12 +403,10 @@
         flex-direction: column;
         gap: 8px;
         overflow-y: auto;
-        max-height: 560px;
+        max-height: 72vh;
         padding-right: 4px;
       }
       .playlist-section {
-        flex-shrink: 0;
-        min-height: min-content;
         border: 1px solid var(--card-border);
         background: rgba(22, 27, 34, 0.4);
         border-radius: 12px;
@@ -466,8 +467,6 @@
         flex-shrink: 0;
       }
       .playlist-section-content {
-        flex-shrink: 0;
-        min-height: min-content;
         display: flex;
         flex-direction: column;
         gap: 6px;
@@ -479,8 +478,6 @@
       }
 
       .playlist-divider {
-        flex-shrink: 0;
-        min-height: min-content;
         display: flex;
         align-items: center;
         gap: 8px;
@@ -502,8 +499,6 @@
         flex-shrink: 0;
       }
       .playlist-folder {
-        flex-shrink: 0;
-        min-height: min-content;
         border: 1px solid var(--card-border);
         background: rgba(22, 27, 34, 0.6);
         border-radius: 12px;
@@ -563,8 +558,6 @@
         flex-shrink: 0;
       }
       .playlist-folder-content {
-        flex-shrink: 0;
-        min-height: min-content;
         display: flex;
         flex-direction: column;
         gap: 6px;
@@ -575,8 +568,6 @@
         display: none !important;
       }
       .playlist-item {
-        flex-shrink: 0;
-        min-height: min-content;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -1357,11 +1348,14 @@
                   // Auto-uncollapse parent section or folder if newly active
                   let parent = el.parentElement;
                   while (parent && parent !== playlistItems) {
-                    if (
-                      parent.classList.contains('playlist-folder') ||
-                      parent.classList.contains('playlist-section')
-                    ) {
+                    if (parent.classList.contains('playlist-section')) {
                       parent.classList.remove('collapsed');
+                      const sKey = parent.getAttribute('data-section-key');
+                      if (sKey) collapsedSections.delete(sKey);
+                    } else if (parent.classList.contains('playlist-folder')) {
+                      parent.classList.remove('collapsed');
+                      const fId = parent.getAttribute('data-folder-id');
+                      if (fId) collapsedFolders.delete(fId);
                     }
                     parent = parent.parentElement;
                   }
@@ -1376,10 +1370,9 @@
           }
 
           renderedPlaylistSignature = currentSignature;
-          lastActiveUniqueId = activeUniqueId;
 
           // If the active item changed to a new item, auto-expand its section and folder
-          if (activeUniqueId && activeUniqueId !== lastActiveUniqueId) {
+          if (activeUniqueId) {
             playlist.forEach(function (it) {
               if (it.uniqueId === activeUniqueId) {
                 if (it.groupId) collapsedFolders.delete(it.groupId);
@@ -1388,6 +1381,7 @@
               }
             });
           }
+          lastActiveUniqueId = activeUniqueId;
 
           playlistItems.innerHTML = '';
 
@@ -1437,6 +1431,7 @@
             const isSectionCollapsed = collapsedSections.has(secKey);
             sectionContainer.className =
               'playlist-section' + (isSectionCollapsed ? ' collapsed' : '');
+            sectionContainer.setAttribute('data-section-key', secKey);
 
             const sectionHeader = document.createElement('div');
             sectionHeader.className = 'playlist-section-header';
@@ -1493,6 +1488,7 @@
                   const isCollapsed = collapsedFolders.has(thisGroupId);
                   folderContainer.className =
                     'playlist-folder' + (isCollapsed ? ' collapsed' : '');
+                  folderContainer.setAttribute('data-folder-id', thisGroupId);
 
                   const folderHeader = document.createElement('div');
                   folderHeader.className = 'playlist-folder-header';

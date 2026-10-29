@@ -23,7 +23,9 @@ const {
   electronApi,
   postSeek,
   stopSharingMediaInZoom,
+  stopZoomSharingAfterMedia,
   toggleMediaWindowVisibility,
+  triggerMediaWindowAutoHide,
 } = vi.hoisted(() => ({
   createTemporaryNotification: vi.fn(),
   electronApi: {
@@ -34,7 +36,9 @@ const {
   },
   postSeek: vi.fn(),
   stopSharingMediaInZoom: vi.fn(),
+  stopZoomSharingAfterMedia: vi.fn(),
   toggleMediaWindowVisibility: vi.fn(),
+  triggerMediaWindowAutoHide: vi.fn(),
 }));
 
 vi.mock('boot/i18n', () => ({
@@ -43,7 +47,13 @@ vi.mock('boot/i18n', () => ({
 
 vi.mock('src/helpers/notifications', () => ({ createTemporaryNotification }));
 vi.mock('src/helpers/mediaPlayback', () => ({ toggleMediaWindowVisibility }));
-vi.mock('src/helpers/zoom', () => ({ stopSharingMediaInZoom }));
+vi.mock('src/helpers/mediaWindowAutoHide', () => ({
+  triggerMediaWindowAutoHide,
+}));
+vi.mock('src/helpers/zoom', () => ({
+  stopSharingMediaInZoom,
+  stopZoomSharingAfterMedia,
+}));
 vi.mock('@vueuse/core', async (importOriginal) => {
   const actual = await importOriginal<typeof VueUse>();
   return {

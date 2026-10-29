@@ -1874,7 +1874,7 @@ watch(
     currentState.mediaPlaying.url,
     currentState.mediaWindowVisible,
     currentState.selectedDate,
-    () => zoomState.meeting?.sharing,
+    zoomState.meeting?.sharing,
   ],
   () => {
     if (currentState.remoteControlRunning) {

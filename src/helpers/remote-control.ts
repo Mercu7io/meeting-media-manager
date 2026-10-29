@@ -9,8 +9,12 @@ import { useBroadcastChannel } from '@vueuse/core';
 import { i18n } from 'boot/i18n';
 import { errorCatcher } from 'src/helpers/error-catcher';
 import { toggleMediaWindowVisibility } from 'src/helpers/mediaPlayback';
+import { triggerMediaWindowAutoHide } from 'src/helpers/mediaWindowAutoHide';
 import { createTemporaryNotification } from 'src/helpers/notifications';
-import { stopSharingMediaInZoom } from 'src/helpers/zoom';
+import {
+  stopSharingMediaInZoom,
+  stopZoomSharingAfterMedia,
+} from 'src/helpers/zoom';
 import { log } from 'src/shared/vanilla';
 import { isAudio, isImage, isVideo } from 'src/utils/media';
 import { useCurrentStateStore } from 'stores/current-state';
@@ -74,29 +78,42 @@ const resolveThumbnail = (
   rawFileUrl?: string,
   isImg?: boolean,
   uniqueId?: string,
+  rawThumbStreamUrl?: string,
 ): { thumbnailPath?: string; thumbnailUrl?: string } => {
-  if (rawThumbUrl && /^https?:\/\//i.test(rawThumbUrl)) {
+  if (
+    rawThumbUrl &&
+    (/^https?:\/\//i.test(rawThumbUrl) || rawThumbUrl.startsWith('data:image/'))
+  ) {
     return {
       thumbnailUrl: rawThumbUrl,
     };
   }
 
-  const target = rawThumbUrl || rawFileUrl;
-  if (!target || target.startsWith('?')) return {};
+  if (rawThumbStreamUrl && /^https?:\/\//i.test(rawThumbStreamUrl)) {
+    return {
+      thumbnailUrl: rawThumbStreamUrl,
+    };
+  }
 
-  let localPath = target;
+  const target = rawThumbUrl || rawFileUrl;
+  if (!target) return {};
+
+  const cleanTarget = target.split('?')[0] || '';
+  if (!cleanTarget) return {};
+
+  let localPath = cleanTarget;
   try {
     const fileUrlToPath = globalThis.electronApi?.fileUrlToPath;
-    if (fileUrlToPath && target.startsWith('file://')) {
-      localPath = fileUrlToPath(target);
-    } else if (target.startsWith('file://')) {
-      localPath = decodeURIComponent(new URL(target).pathname);
+    if (fileUrlToPath && cleanTarget.startsWith('file://')) {
+      localPath = fileUrlToPath(cleanTarget);
+    } else if (cleanTarget.startsWith('file://')) {
+      localPath = decodeURIComponent(new URL(cleanTarget).pathname);
       if (/^\/[a-zA-Z]:/.test(localPath)) {
         localPath = localPath.slice(1);
       }
     }
   } catch {
-    localPath = target.replace(/^file:\/\/\/?/, '');
+    localPath = cleanTarget.replace(/^file:\/\/\/?/, '');
   }
 
   const endpointUrl = uniqueId
@@ -122,10 +139,25 @@ export const formatRemoteControlState = (): RemoteControlState => {
   const sections = currentState.selectedDateObject?.mediaSections ?? [];
 
   for (const section of sections) {
-    const sectionName =
-      section.config?.label ||
-      section.config?.documentTitle ||
-      section.config?.uniqueId;
+    let sectionName = section.config?.label;
+    if (!sectionName) {
+      if (
+        section.config?.uniqueId === 'imported-media' ||
+        section.config?.uniqueId?.startsWith('custom-')
+      ) {
+        sectionName = i18n.global.t('imported-media');
+      } else if (
+        section.config?.uniqueId &&
+        i18n.global.te(section.config.uniqueId)
+      ) {
+        sectionName = i18n.global.t(section.config.uniqueId);
+      } else {
+        sectionName =
+          section.config?.documentTitle ||
+          section.config?.uniqueId ||
+          'General';
+      }
+    }
     const sectionId = section.config?.uniqueId || undefined;
 
     for (const item of section.items ?? []) {
@@ -179,6 +211,7 @@ export const formatRemoteControlState = (): RemoteControlState => {
             child.fileUrl,
             image,
             childUniqueId,
+            child.thumbnailStreamUrl,
           );
 
           const childTitle = resolveItemTitle(
@@ -217,6 +250,7 @@ export const formatRemoteControlState = (): RemoteControlState => {
           item.fileUrl,
           image,
           itemUniqueId,
+          item.thumbnailStreamUrl,
         );
 
         const itemTitle = resolveItemTitle(
@@ -394,6 +428,8 @@ export const handleRemoteControlAction = (action: RemoteControlAction) => {
         break;
       }
       case 'stop': {
+        stopZoomSharingAfterMedia();
+        triggerMediaWindowAutoHide(false);
         globalThis.dispatchEvent(
           new CustomEvent<undefined>('remoteControlStop'),
         );
@@ -421,9 +457,10 @@ export const handleRemoteControlAction = (action: RemoteControlAction) => {
       }
       case 'stop_zoom_share': {
         const zoomState = useZoomStateStore();
-        if (zoomState.meeting) {
-          zoomState.meeting.sharing = false;
-        }
+        zoomState.setMeeting({
+          ...(zoomState.meeting ?? { found: true }),
+          sharing: false,
+        });
         broadcastRemoteControlState();
         stopSharingMediaInZoom().catch((error: unknown) => {
           errorCatcher(error, {

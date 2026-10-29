@@ -2735,8 +2735,8 @@ function stopMedia(forOtherMediaItem = false) {
 
   if (!forOtherMediaItem) {
     // Stop one-shot workflows when media is stopped (unless it's a media switch instead of a stop)
-    triggerMediaWindowAutoHide(false);
     stopZoomSharingAfterMedia();
+    triggerMediaWindowAutoHide(false);
     void nextTick(() => {
       globalThis.dispatchEvent(new CustomEvent<undefined>('shortcutMediaNext'));
     });

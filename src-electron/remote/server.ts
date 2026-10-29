@@ -140,18 +140,16 @@ const handleHttpRequest = (req: IncomingMessage, res: ServerResponse) => {
 
   if (pathname === '/api/thumbnail') {
     const id = reqUrl.searchParams.get('id');
-    if (!id || !thumbnailRegistry.has(id)) {
+    const pathParam = reqUrl.searchParams.get('path');
+    let localPath =
+      (id ? thumbnailRegistry.get(id) : undefined) || pathParam || undefined;
+    if (!localPath) {
       res.writeHead(404, { 'Content-Type': 'text/plain' });
       res.end('Thumbnail Not Found');
       return;
     }
 
-    let localPath = thumbnailRegistry.get(id);
-    if (!localPath) {
-      res.writeHead(404, { 'Content-Type': 'text/plain' });
-      res.end('Thumbnail File Missing');
-      return;
-    }
+    localPath = localPath.split('?')[0] || '';
 
     if (localPath.startsWith('file://')) {
       try {
