@@ -677,7 +677,6 @@ export const initRemoteControl = (): (() => void) => {
           activeControllerName: status.activeControllerName || '',
           clientCount: status.clientCount,
           pairingCode: status.pairingCode,
-          port: status.port,
           running: status.running,
           urls: status.urls,
         });

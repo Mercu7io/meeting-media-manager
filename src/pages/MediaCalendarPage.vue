@@ -3278,10 +3278,10 @@ watch(
       );
       if (repeatHandled) return;
 
+      triggerMediaWindowAutoHide(false);
       // Whichever Zoom integration is sharing the media window: a video that
       // ends on its own must stop the share like a manual stop does.
       stopZoomSharingAfterMedia();
-      triggerMediaWindowAutoHide(false);
 
       mediaPlaying.value = atRest;
 

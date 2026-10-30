@@ -24,3 +24,4 @@
 - Added real-time controller status synchronization to the desktop app, mobile device logout and unpair capabilities, and on-demand pairing PIN code regeneration.
 - Added a quick-disconnect button beside the active controller in the desktop popup to remove and revoke the active controller on demand.
 - Fixed Zoom screen sharing protection during device pairing and stop actions, enabled dynamic real-time remote control scope synchronization, and permitted playlist playback in transport mode.
+- Aligned media stop and window autohide order with upstream, and fixed mobile playlist section flattening by enforcing non-shrinkable headers and section containers.
