@@ -12,9 +12,12 @@ import {
   __testables,
   broadcastRemoteControlState,
   formatRemoteControlState,
+  generateNewPairingCode,
   generateRandomPin,
   handleRemoteControlAction,
+  initRemoteControl,
   parseRemoteControlPort,
+  removeActiveController,
   syncRemoteControl,
 } from '../remote-control';
 
@@ -29,7 +32,15 @@ const {
 } = vi.hoisted(() => ({
   createTemporaryNotification: vi.fn(),
   electronApi: {
-    onRemoteControlAction: vi.fn(() => vi.fn()),
+    getRemoteControlStatus: vi.fn(),
+    onRemoteControlAction: vi.fn<(callback?: unknown) => () => void>(
+      () => () => undefined,
+    ),
+    onRemoteControlStatusChanged: vi.fn<(callback?: unknown) => () => void>(
+      () => () => undefined,
+    ),
+    regenerateRemoteControlPairingCode: vi.fn(),
+    revokeActiveRemoteController: vi.fn(),
     sendRemoteControlStateUpdate: vi.fn(),
     startRemoteControl: vi.fn(),
     stopRemoteControl: vi.fn(),
@@ -133,6 +144,7 @@ describe('syncRemoteControl', () => {
       pin: '5678',
       port: 8080,
       requirePin: true,
+      scope: 'partial',
     });
 
     const currentState = useCurrentStateStore();
@@ -174,12 +186,63 @@ describe('syncRemoteControl', () => {
       pin: '2222',
       port: 9000,
       requirePin: true,
+      scope: 'partial',
     });
 
     configure({ enableRemoteControl: false });
     await syncRemoteControl();
     expect(electronApi.stopRemoteControl).toHaveBeenCalledTimes(1);
     expect(useCurrentStateStore().remoteControlRunning).toBe(false);
+  });
+
+  it('updates scope dynamically without restarting the server', async () => {
+    configure({
+      enableRemoteControl: true,
+      remoteControlPin: '1111',
+      remoteControlPort: '8080',
+      remoteControlRequirePin: true,
+      remoteControlScope: 'partial',
+    });
+    electronApi.startRemoteControl.mockResolvedValue({
+      clientCount: 0,
+      pairingCode: '123456',
+      pin: '1111',
+      port: 8080,
+      running: true,
+      scope: 'partial',
+      urls: [],
+    });
+    await syncRemoteControl();
+    expect(electronApi.startRemoteControl).toHaveBeenCalledWith({
+      pin: '1111',
+      port: 8080,
+      requirePin: true,
+      scope: 'partial',
+    });
+
+    configure({
+      enableRemoteControl: true,
+      remoteControlPin: '1111',
+      remoteControlPort: '8080',
+      remoteControlRequirePin: true,
+      remoteControlScope: 'full',
+    });
+    electronApi.startRemoteControl.mockResolvedValue({
+      clientCount: 0,
+      pairingCode: '123456',
+      pin: '1111',
+      port: 8080,
+      running: true,
+      scope: 'full',
+      urls: [],
+    });
+    await syncRemoteControl();
+    expect(electronApi.startRemoteControl).toHaveBeenLastCalledWith({
+      pin: '1111',
+      port: 8080,
+      requirePin: true,
+      scope: 'full',
+    });
   });
 
   it('notifies user on start failure', async () => {
@@ -484,5 +547,67 @@ describe('formatRemoteControlState & broadcastRemoteControlState', () => {
     // Ghost item should be filtered out
     expect(state.playlist).toHaveLength(1);
     expect(state.playlist[0]?.groupTitle).toBe('Discussion Part');
+  });
+
+  it('updates store on status change listener and allows regenerating pairing code', async () => {
+    let statusCallback: ((status: unknown) => void) | undefined;
+    electronApi.onRemoteControlStatusChanged.mockImplementation(
+      (cb: unknown) => {
+        statusCallback = cb as (status: unknown) => void;
+        return () => undefined;
+      },
+    );
+
+    initRemoteControl();
+    expect(electronApi.onRemoteControlStatusChanged).toHaveBeenCalled();
+
+    // Trigger status change event
+    const currentState = useCurrentStateStore();
+    statusCallback?.({
+      activeControllerName: 'iPhone 15 Pro',
+      clientCount: 1,
+      pairingCode: '987654',
+      port: 8080,
+      running: true,
+      urls: ['http://192.168.1.100:8080/'],
+    });
+
+    expect(currentState.remoteControlActiveController).toBe('iPhone 15 Pro');
+    expect(currentState.remoteControlClientCount).toBe(1);
+    expect(currentState.remoteControlPairingCode).toBe('987654');
+
+    // Test generateNewPairingCode
+    electronApi.regenerateRemoteControlPairingCode.mockResolvedValueOnce({
+      activeControllerName: 'iPhone 15 Pro',
+      clientCount: 1,
+      pairedSessions: [],
+      pairingCode: '112233',
+      port: 8080,
+      running: true,
+      scope: 'partial',
+      urls: ['http://192.168.1.100:8080/'],
+    });
+
+    const newCode = await generateNewPairingCode();
+    expect(newCode).toBe('112233');
+    expect(currentState.remoteControlPairingCode).toBe('112233');
+
+    // Test removeActiveController
+    electronApi.getRemoteControlStatus.mockResolvedValueOnce({
+      activeControllerDeviceId: '',
+      activeControllerName: '',
+      clientCount: 0,
+      pairedSessions: [],
+      pairingCode: '112233',
+      port: 8080,
+      running: true,
+      scope: 'partial',
+      urls: ['http://192.168.1.100:8080/'],
+    });
+
+    await removeActiveController();
+    expect(electronApi.revokeActiveRemoteController).toHaveBeenCalledTimes(1);
+    expect(currentState.remoteControlActiveController).toBe('');
+    expect(currentState.remoteControlActiveControllerDeviceId).toBe('');
   });
 });

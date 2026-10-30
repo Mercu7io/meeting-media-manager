@@ -65,7 +65,11 @@ import { convertHeic } from 'src-electron/main/heic';
 import { openFolder } from 'src-electron/main/open-folder';
 import { exportHtmlToPdf } from 'src-electron/main/pdf';
 import {
+  disconnectAllRemoteControlClients,
   getRemoteControlStatus,
+  regenerateRemoteControlPairingCode,
+  revokeActiveRemoteController,
+  revokeRemoteControlSession,
   startRemoteControl,
   stopRemoteControl,
   updateRemoteControlState,
@@ -419,6 +423,28 @@ handleIpcInvoke('startRemoteControl', async (_e, options: unknown) =>
 handleIpcInvoke('stopRemoteControl', async () => {
   await stopRemoteControl();
 });
+
+handleIpcInvoke('revokeRemoteControlSession', (_e, deviceId: unknown) => {
+  if (typeof deviceId === 'string') {
+    revokeRemoteControlSession(deviceId);
+  }
+});
+
+handleIpcInvoke('revokeActiveRemoteController', () => {
+  revokeActiveRemoteController();
+});
+
+handleIpcInvoke('disconnectAllRemoteControlClients', () => {
+  disconnectAllRemoteControlClients();
+});
+
+handleIpcInvoke(
+  'regenerateRemoteControlPairingCode',
+  (_e, customCode: unknown) =>
+    regenerateRemoteControlPairingCode(
+      typeof customCode === 'string' ? customCode : undefined,
+    ),
+);
 
 handleIpcSend('remote-control:state-update', (_e, state: unknown) => {
   updateRemoteControlState(state as RemoteControlState);

@@ -124,6 +124,7 @@ export interface ElectronApi {
    */
   decryptSecretSync: (cipherText: string) => string;
   dirname: typeof dirname;
+  disconnectAllRemoteControlClients: () => Promise<void>;
   downloadFile: (
     url: string,
     saveDir: string,
@@ -313,6 +314,9 @@ export interface ElectronApi {
   onRemoteControlAction: (
     callback: (action: RemoteControlAction) => void,
   ) => () => void;
+  onRemoteControlStatusChanged: (
+    callback: (status: RemoteControlStatus) => void,
+  ) => () => void;
   onShortcut: (
     callback: (args: { shortcut: keyof SettingsValues }) => void,
   ) => void;
@@ -390,12 +394,17 @@ export interface ElectronApi {
     withSizes?: boolean,
     recursive?: boolean,
   ) => Promise<FileItem[]>;
+  regenerateRemoteControlPairingCode: (
+    customCode?: string,
+  ) => Promise<RemoteControlStatus>;
   registerShortcut: (name: keyof SettingsValues, shortcut: string) => void;
   relaunchApp: () => void;
   removeListeners: (channel: ElectronIpcListenKey) => void;
   resolve: typeof resolve;
   restartZoomHelper: () => Promise<ZoomHelperStartResult>;
   resumeAllDownloads: () => void;
+  revokeActiveRemoteController: () => Promise<void>;
+  revokeRemoteControlSession: (deviceId: string) => Promise<void>;
   saveFileDialog: (
     defaultPath: string,
     filter?: FileDialogFilter,
@@ -537,6 +546,7 @@ export type ElectronIpcInvokeKey =
   | 'closeSqliteConnections'
   | 'convertHeic'
   | 'createVideoFromNonVideo'
+  | 'disconnectAllRemoteControlClients'
   | 'downloadFile'
   | 'ensureMacosFolderPermission'
   | 'executeQuery'
@@ -566,8 +576,11 @@ export type ElectronIpcInvokeKey =
   | 'openFolder'
   | 'openFolderDialog'
   | 'passWafChallenge'
+  | 'regenerateRemoteControlPairingCode'
   | 'registerShortcut'
   | 'restartZoomHelper'
+  | 'revokeActiveRemoteController'
+  | 'revokeRemoteControlSession'
   | 'saveFileDialog'
   | 'set-hardware-acceleration'
   | 'setExecutable'
@@ -597,6 +610,7 @@ export type ElectronIpcListenKey =
   | 'media-window-renderer-gone'
   | 'pathProbeNetworkWarning'
   | 'remote-control:action'
+  | 'remote-control:status-changed'
   | 'screenChange'
   | 'screenPrefsChange'
   | 'setShouldQuit'

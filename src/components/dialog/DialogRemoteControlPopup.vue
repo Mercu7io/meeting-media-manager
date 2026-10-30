@@ -27,7 +27,7 @@
       <template v-if="currentSettings?.enableRemoteControl">
         <q-separator class="bg-accent-200 q-my-md" />
 
-        <!-- Port configuration -->
+        <!-- Port and Scope configuration -->
         <div class="row items-center q-col-gutter-sm q-mb-md">
           <div class="col-12 col-sm-6">
             <q-input
@@ -39,40 +39,99 @@
             />
           </div>
           <div class="col-12 col-sm-6">
-            <q-toggle
-              v-model="currentSettings.remoteControlRequirePin"
-              color="primary"
-              :label="t('remoteControlRequirePin')"
+            <q-select
+              v-model="currentSettings.remoteControlScope"
+              dense
+              emit-value
+              :label="t('remoteControlScope')"
+              map-options
+              :options="scopeOptions"
+              outlined
             />
           </div>
         </div>
 
-        <!-- PIN configuration -->
+        <!-- Pairing Code Display -->
         <div
-          v-if="currentSettings.remoteControlRequirePin"
-          class="row items-center q-col-gutter-sm q-mb-md"
+          class="row items-center justify-between q-pa-sm bg-accent-100 rounded-borders q-mb-md"
         >
-          <div class="col-8">
-            <q-input
-              v-model="currentSettings.remoteControlPin"
-              dense
-              :label="t('remoteControlPin')"
-              maxlength="8"
-              outlined
-            />
+          <div>
+            <div class="text-caption text-weight-medium">
+              {{ t('remote-control-pairing-code') }}
+            </div>
+            <div class="row items-center q-gutter-x-sm">
+              <div
+                class="text-h5 text-primary text-weight-bold"
+                style="letter-spacing: 0.15em"
+              >
+                {{ remoteControlPairingCode || '------' }}
+              </div>
+              <q-btn
+                v-if="remoteControlRunning"
+                :aria-label="t('remote-control-generate-new-pin')"
+                color="primary"
+                dense
+                flat
+                icon="mmm-refresh"
+                round
+                size="sm"
+                @click="handleRegeneratePin"
+              >
+                <q-tooltip :delay="500">{{
+                  t('remote-control-generate-new-pin')
+                }}</q-tooltip>
+              </q-btn>
+            </div>
           </div>
-          <div class="col-4">
-            <q-btn
-              class="full-width"
-              color="primary"
-              dense
-              no-caps
-              outline
-              @click="regeneratePin"
-            >
-              {{ t('regenerate-pin') }}
-            </q-btn>
+          <div class="text-caption text-dark-grey text-right col-6">
+            {{ t('remote-control-pairing-code-explain') }}
           </div>
+        </div>
+
+        <!-- Active Controller & Emergency Kill Switch -->
+        <div
+          v-if="remoteControlRunning"
+          class="row items-center justify-between q-mb-md"
+        >
+          <div>
+            <div class="text-caption text-dark-grey">
+              {{ t('remote-control-active-controller') }}
+            </div>
+            <div class="row items-center q-gutter-x-xs">
+              <div class="text-body2 text-weight-bold">
+                {{
+                  remoteControlActiveController ||
+                  t('remote-control-no-controller')
+                }}
+              </div>
+              <q-btn
+                v-if="remoteControlActiveController"
+                :aria-label="t('remote-control-remove-controller')"
+                color="negative"
+                dense
+                flat
+                icon="mmm-close"
+                round
+                size="xs"
+                @click="handleRemoveActiveController"
+              >
+                <q-tooltip :delay="500">{{
+                  t('remote-control-remove-controller')
+                }}</q-tooltip>
+              </q-btn>
+            </div>
+          </div>
+          <q-btn
+            v-if="remoteControlClientCount > 0"
+            color="negative"
+            dense
+            no-caps
+            outline
+            size="sm"
+            @click="handleDisconnectAll"
+          >
+            {{ t('remote-control-disconnect-all') }}
+          </q-btn>
         </div>
 
         <!-- Network URLs & QR Code -->
@@ -127,7 +186,7 @@
             />
           </div>
 
-          <!-- QR Code section -->
+          <!-- QR Code section (pure URL, no credentials) -->
           <div v-if="qrCodeDataUrl" class="column items-center q-mt-md">
             <div class="qr-container q-pa-xs">
               <img alt="QR Code" class="qr-image" :src="qrCodeDataUrl" />
@@ -149,9 +208,13 @@ import QRCode from 'qrcode';
 import { copyToClipboard } from 'quasar';
 import { errorCatcher } from 'src/helpers/error-catcher';
 import { createTemporaryNotification } from 'src/helpers/notifications';
-import { generateRandomPin } from 'src/helpers/remote-control';
+import {
+  disconnectAllRemoteControlDevices,
+  generateNewPairingCode,
+  removeActiveController,
+} from 'src/helpers/remote-control';
 import { useCurrentStateStore } from 'stores/current-state';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import ActionPopup from '../ui/ActionPopup.vue';
@@ -163,12 +226,19 @@ const open = defineModel<boolean>({ required: true });
 const currentState = useCurrentStateStore();
 const {
   currentSettings,
+  remoteControlActiveController,
   remoteControlClientCount,
+  remoteControlPairingCode,
   remoteControlRunning,
   remoteControlUrls,
 } = storeToRefs(currentState);
 
 const selectedUrl = ref<string>('');
+
+const scopeOptions = computed(() => [
+  { label: t('remote-control-scope-partial'), value: 'partial' },
+  { label: t('remote-control-scope-full'), value: 'full' },
+]);
 
 const selectUrl = (url: string) => {
   selectedUrl.value = url;
@@ -201,16 +271,8 @@ const generateQr = async () => {
     return;
   }
 
-  const pin = currentSettings.value?.remoteControlRequirePin
-    ? currentSettings.value?.remoteControlPin
-    : undefined;
-
-  const targetUrl = pin
-    ? `${primaryUrl}?pin=${encodeURIComponent(pin)}`
-    : primaryUrl;
-
   try {
-    qrCodeDataUrl.value = await QRCode.toDataURL(targetUrl, {
+    qrCodeDataUrl.value = await QRCode.toDataURL(primaryUrl, {
       color: {
         dark: '#1e293b',
         light: '#ffffff',
@@ -225,11 +287,7 @@ const generateQr = async () => {
 
 const copyUrl = async (url: string) => {
   try {
-    const pin = currentSettings.value?.remoteControlRequirePin
-      ? currentSettings.value?.remoteControlPin
-      : undefined;
-    const targetUrl = pin ? `${url}?pin=${encodeURIComponent(pin)}` : url;
-    await copyToClipboard(targetUrl);
+    await copyToClipboard(url);
     createTemporaryNotification({
       group: 'remote-control',
       icon: 'mmm-link',
@@ -242,32 +300,67 @@ const copyUrl = async (url: string) => {
 };
 
 const openInBrowser = () => {
-  const base =
+  const target =
     selectedUrl.value ||
     remoteControlUrls.value[0] ||
     `http://localhost:${currentSettings.value?.remoteControlPort || '8080'}/`;
-  const pin = currentSettings.value?.remoteControlRequirePin
-    ? currentSettings.value?.remoteControlPin
-    : undefined;
-  const target = pin ? `${base}?pin=${encodeURIComponent(pin)}` : base;
   if (globalThis.electronApi?.openExternalUrl) {
     globalThis.electronApi.openExternalUrl(target);
-  } else {
-    window.open(target, '_blank');
   }
 };
 
-const regeneratePin = () => {
-  if (currentSettings.value) {
-    currentSettings.value.remoteControlPin = generateRandomPin();
+const handleDisconnectAll = async () => {
+  await disconnectAllRemoteControlDevices();
+};
+
+const handleRemoveActiveController = async () => {
+  await removeActiveController();
+  createTemporaryNotification({
+    group: 'remote-control',
+    icon: 'mmm-check',
+    message: t('remote-control-controller-removed'),
+    type: 'positive',
+  });
+};
+
+const handleRegeneratePin = async () => {
+  const newPin = await generateNewPairingCode();
+  if (newPin) {
+    createTemporaryNotification({
+      group: 'remote-control',
+      icon: 'mmm-check',
+      message: t('remote-control-pin-regenerated'),
+      type: 'positive',
+    });
   }
 };
+
+const refreshStatus = async () => {
+  if (globalThis.electronApi?.getRemoteControlStatus) {
+    try {
+      const status = await globalThis.electronApi.getRemoteControlStatus();
+      currentState.setRemoteControlStatus({
+        activeControllerName: status.activeControllerName || '',
+        clientCount: status.clientCount,
+        pairingCode: status.pairingCode,
+        running: status.running,
+        urls: status.urls,
+      });
+    } catch (error) {
+      errorCatcher(error, { contexts: { fn: { name: 'refreshStatus' } } });
+    }
+  }
+};
+
+watch(open, (isOpen) => {
+  if (isOpen) {
+    void refreshStatus();
+  }
+});
 
 watchImmediate(
   () => [
     remoteControlUrls.value,
-    currentSettings.value?.remoteControlPin,
-    currentSettings.value?.remoteControlRequirePin,
     remoteControlRunning.value,
     selectedUrl.value,
   ],

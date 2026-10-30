@@ -19,3 +19,8 @@
 - Resolved thumbnail streaming for video and audio companion images, eliminated playlist DOM cache invalidation, and added zero-latency Zoom sharing state synchronization.
 - Fixed remote control play/pause icon toggling, eliminated queue flexbox clipping, added multi-section initial auto-collapse, and implemented resilient SVG thumbnail fallback streaming for audio/video media.
 - Fixed Zoom screen share auto-stop order when media ends, eliminated remote queue section height clipping, resolved section title localization, and fixed remote artwork hiding and streaming fallbacks.
+- Hardened remote control server with pairing tokens, CSWSH Origin validation, single-controller arbitration, reliable command acks, eliminated nested folder elements to fix queue folding, restored Zoom auto-stop order, and resolved artwork streaming and CSP headers.
+- Fixed thumbnail resolution for media lacking companion images by forwarding CDN stream URLs via HTTP 302 redirects, auto-refreshing remote queue thumbnails upon device pairing, and hiding broken artwork elements.
+- Added real-time controller status synchronization to the desktop app, mobile device logout and unpair capabilities, and on-demand pairing PIN code regeneration.
+- Added a quick-disconnect button beside the active controller in the desktop popup to remove and revoke the active controller on demand.
+- Fixed Zoom screen sharing protection during device pairing and stop actions, enabled dynamic real-time remote control scope synchronization, and permitted playlist playback in transport mode.

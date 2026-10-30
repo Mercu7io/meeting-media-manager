@@ -834,6 +834,10 @@ const listOptionLabels = (item: SettingsItem): string[] => {
 
   if (item.list === 'timerHourFormats') return [t('24-hour'), t('12-hour')];
 
+  if (item.list === 'remoteControlScopes') {
+    return [t('remote-control-scope-partial'), t('remote-control-scope-full')];
+  }
+
   if (item.list === 'timerModes') return [t('count-up'), t('count-down')];
 
   return [];

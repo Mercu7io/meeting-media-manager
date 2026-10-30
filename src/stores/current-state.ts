@@ -131,7 +131,10 @@ interface Store {
    */
   pendingSectionImports: MediaSectionIdentifier[];
   pinyinActive: boolean;
+  remoteControlActiveController: string;
+  remoteControlActiveControllerDeviceId: string;
   remoteControlClientCount: number;
+  remoteControlPairingCode: string;
   remoteControlPin: string;
   remoteControlRunning: boolean;
   remoteControlUrls: string[];
@@ -381,7 +384,10 @@ export const useCurrentStateStore = defineStore('current-state', {
       return this.getInvalidSettings(newCongregation).length > 0;
     },
     setRemoteControlStatus(status: {
+      activeControllerDeviceId?: string;
+      activeControllerName?: string;
       clientCount?: number;
+      pairingCode?: string;
       pin?: string;
       running?: boolean;
       urls?: string[];
@@ -390,6 +396,13 @@ export const useCurrentStateStore = defineStore('current-state', {
         this.remoteControlRunning = status.running;
       if (status.urls !== undefined) this.remoteControlUrls = status.urls;
       if (status.pin !== undefined) this.remoteControlPin = status.pin;
+      if (status.pairingCode !== undefined)
+        this.remoteControlPairingCode = status.pairingCode;
+      if (status.activeControllerDeviceId !== undefined)
+        this.remoteControlActiveControllerDeviceId =
+          status.activeControllerDeviceId;
+      if (status.activeControllerName !== undefined)
+        this.remoteControlActiveController = status.activeControllerName;
       if (status.clientCount !== undefined)
         this.remoteControlClientCount = status.clientCount;
     },
@@ -722,7 +735,10 @@ export const useCurrentStateStore = defineStore('current-state', {
       onlyShowInvalidSettings: false,
       pendingSectionImports: [],
       pinyinActive: false,
+      remoteControlActiveController: '',
+      remoteControlActiveControllerDeviceId: '',
       remoteControlClientCount: 0,
+      remoteControlPairingCode: '',
       remoteControlPin: '',
       remoteControlRunning: false,
       remoteControlUrls: [],

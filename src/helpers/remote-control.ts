@@ -1,5 +1,6 @@
 import type {
   RemoteControlAction,
+  RemoteControlScope,
   RemoteControlState,
   RemoteMediaType,
   RemotePlaylistItem,
@@ -9,12 +10,8 @@ import { useBroadcastChannel } from '@vueuse/core';
 import { i18n } from 'boot/i18n';
 import { errorCatcher } from 'src/helpers/error-catcher';
 import { toggleMediaWindowVisibility } from 'src/helpers/mediaPlayback';
-import { triggerMediaWindowAutoHide } from 'src/helpers/mediaWindowAutoHide';
 import { createTemporaryNotification } from 'src/helpers/notifications';
-import {
-  stopSharingMediaInZoom,
-  stopZoomSharingAfterMedia,
-} from 'src/helpers/zoom';
+import { getZoomMeetingState, stopSharingMediaInZoom } from 'src/helpers/zoom';
 import { log } from 'src/shared/vanilla';
 import { isAudio, isImage, isVideo } from 'src/utils/media';
 import { useCurrentStateStore } from 'stores/current-state';
@@ -36,8 +33,10 @@ export const generateRandomPin = (): string =>
 let runningPort: null | number = null;
 let runningPin: null | string = null;
 let runningRequirePin = true;
+let runningScope: null | RemoteControlScope = null;
 let syncInProgress: null | Promise<void> = null;
 let removeActionListener: (() => void) | null = null;
+let removeStatusListener: (() => void) | null = null;
 
 const notifyStartFailed = (error: string | undefined) => {
   createTemporaryNotification({
@@ -79,7 +78,11 @@ const resolveThumbnail = (
   isImg?: boolean,
   uniqueId?: string,
   rawThumbStreamUrl?: string,
-): { thumbnailPath?: string; thumbnailUrl?: string } => {
+): {
+  thumbnailPath?: string;
+  thumbnailStreamUrl?: string;
+  thumbnailUrl?: string;
+} => {
   if (
     rawThumbUrl &&
     (/^https?:\/\//i.test(rawThumbUrl) || rawThumbUrl.startsWith('data:image/'))
@@ -89,41 +92,57 @@ const resolveThumbnail = (
     };
   }
 
-  if (rawThumbStreamUrl && /^https?:\/\//i.test(rawThumbStreamUrl)) {
+  // Candidate must be an image file, NEVER an audio or video file!
+  const candidate =
+    rawThumbUrl && !rawThumbUrl.startsWith('?')
+      ? rawThumbUrl
+      : isImg && rawFileUrl
+        ? rawFileUrl
+        : undefined;
+
+  let localPath: string | undefined;
+
+  if (candidate) {
+    const cleanTarget = candidate.split('?')[0] || '';
+    if (cleanTarget) {
+      try {
+        const fileUrlToPath = globalThis.electronApi?.fileUrlToPath;
+        if (fileUrlToPath && cleanTarget.startsWith('file://')) {
+          localPath = fileUrlToPath(cleanTarget);
+        } else if (cleanTarget.startsWith('file://')) {
+          localPath = decodeURIComponent(new URL(cleanTarget).pathname);
+          if (/^\/[a-zA-Z]:/.test(localPath)) {
+            localPath = localPath.slice(1);
+          }
+        } else {
+          localPath = cleanTarget;
+        }
+      } catch {
+        localPath = cleanTarget.replace(/^file:\/\/\/?/, '');
+      }
+    }
+  }
+
+  const streamUrl =
+    rawThumbStreamUrl && /^https?:\/\//i.test(rawThumbStreamUrl)
+      ? rawThumbStreamUrl
+      : undefined;
+
+  if (uniqueId && (localPath || streamUrl)) {
     return {
-      thumbnailUrl: rawThumbStreamUrl,
+      thumbnailPath: localPath,
+      thumbnailStreamUrl: streamUrl,
+      thumbnailUrl: `/api/thumbnail?id=${encodeURIComponent(uniqueId)}`,
     };
   }
 
-  const target = rawThumbUrl || rawFileUrl;
-  if (!target) return {};
-
-  const cleanTarget = target.split('?')[0] || '';
-  if (!cleanTarget) return {};
-
-  let localPath = cleanTarget;
-  try {
-    const fileUrlToPath = globalThis.electronApi?.fileUrlToPath;
-    if (fileUrlToPath && cleanTarget.startsWith('file://')) {
-      localPath = fileUrlToPath(cleanTarget);
-    } else if (cleanTarget.startsWith('file://')) {
-      localPath = decodeURIComponent(new URL(cleanTarget).pathname);
-      if (/^\/[a-zA-Z]:/.test(localPath)) {
-        localPath = localPath.slice(1);
-      }
-    }
-  } catch {
-    localPath = cleanTarget.replace(/^file:\/\/\/?/, '');
+  if (streamUrl) {
+    return {
+      thumbnailUrl: streamUrl,
+    };
   }
 
-  const endpointUrl = uniqueId
-    ? `/api/thumbnail?id=${encodeURIComponent(uniqueId)}`
-    : undefined;
-
-  return {
-    thumbnailPath: localPath || undefined,
-    thumbnailUrl: endpointUrl,
-  };
+  return {};
 };
 
 export const formatRemoteControlState = (): RemoteControlState => {
@@ -231,6 +250,7 @@ export const formatRemoteControlState = (): RemoteControlState => {
             sectionId,
             songNumber: childSongNumber,
             thumbnailPath: thumb.thumbnailPath,
+            thumbnailStreamUrl: thumb.thumbnailStreamUrl,
             thumbnailUrl: thumb.thumbnailUrl,
             title: childTitle,
             uniqueId: childUniqueId,
@@ -268,6 +288,7 @@ export const formatRemoteControlState = (): RemoteControlState => {
           sectionId,
           songNumber,
           thumbnailPath: thumb.thumbnailPath,
+          thumbnailStreamUrl: thumb.thumbnailStreamUrl,
           thumbnailUrl: thumb.thumbnailUrl,
           title: itemTitle,
           uniqueId: itemUniqueId,
@@ -286,6 +307,7 @@ export const formatRemoteControlState = (): RemoteControlState => {
   let uniqueId = mediaPlaying.uniqueId || '';
   let thumbnailUrl: string | undefined;
   let thumbnailPath: string | undefined;
+  let thumbnailStreamUrl: string | undefined;
 
   const matched = playlist.find(
     (p) =>
@@ -301,6 +323,7 @@ export const formatRemoteControlState = (): RemoteControlState => {
     else if (matched.isAudio) mediaType = 'audio';
     thumbnailUrl = matched.thumbnailUrl;
     thumbnailPath = matched.thumbnailPath;
+    thumbnailStreamUrl = matched.thumbnailStreamUrl;
     if (!uniqueId) uniqueId = matched.uniqueId;
   } else if (mediaPlaying.url) {
     title = mediaPlaying.url.split('/').pop() || '';
@@ -316,6 +339,7 @@ export const formatRemoteControlState = (): RemoteControlState => {
     );
     thumbnailUrl = thumb.thumbnailUrl;
     thumbnailPath = thumb.thumbnailPath;
+    thumbnailStreamUrl = thumb.thumbnailStreamUrl;
   }
 
   return {
@@ -327,7 +351,9 @@ export const formatRemoteControlState = (): RemoteControlState => {
     mediaType,
     mediaWindowVisible,
     playlist,
+    scope: currentState.currentSettings?.remoteControlScope || 'partial',
     thumbnailPath,
+    thumbnailStreamUrl,
     thumbnailUrl,
     title,
     uniqueId,
@@ -428,45 +454,22 @@ export const handleRemoteControlAction = (action: RemoteControlAction) => {
         break;
       }
       case 'stop': {
-        stopZoomSharingAfterMedia();
-        triggerMediaWindowAutoHide(false);
         globalThis.dispatchEvent(
           new CustomEvent<undefined>('remoteControlStop'),
         );
-        if (currentState.mediaPlaying.url || currentState.mediaPlaying.action) {
-          currentState.mediaPlaying = {
-            action: '',
-            currentPosition: 0,
-            currentPositionUpdatedAt: 0,
-            duration: 0,
-            pan: { x: 0, y: 0 },
-            playbackConfirmedToken: 0,
-            playbackRate: 1,
-            playToken: 0,
-            seekTo: 0,
-            shouldLoop: false,
-            slideshowAudioUrl: '',
-            subtitlesUrl: '',
-            uniqueId: '',
-            url: '',
-            zoom: 1,
-          };
-          toggleMediaWindowVisibility(false);
-        }
         break;
       }
       case 'stop_zoom_share': {
-        const zoomState = useZoomStateStore();
-        zoomState.setMeeting({
-          ...(zoomState.meeting ?? { found: true }),
-          sharing: false,
-        });
-        broadcastRemoteControlState();
-        stopSharingMediaInZoom().catch((error: unknown) => {
-          errorCatcher(error, {
-            contexts: { fn: { name: 'stopSharingMediaInZoom' } },
+        stopSharingMediaInZoom()
+          .then(() => {
+            void getZoomMeetingState();
+            broadcastRemoteControlState();
+          })
+          .catch((error: unknown) => {
+            errorCatcher(error, {
+              contexts: { fn: { name: 'stopSharingMediaInZoom' } },
+            });
           });
-        });
         break;
       }
       case 'toggle_blackout': {
@@ -495,14 +498,18 @@ const applySettings = async () => {
   const wantedPort = settings?.enableRemoteControl
     ? parseRemoteControlPort(settings.remoteControlPort)
     : null;
+  const scope = settings?.remoteControlScope || 'partial';
 
   if (wantedPort === null) {
     if (runningPort !== null) {
       await globalThis.electronApi.stopRemoteControl();
       runningPort = null;
       runningPin = null;
+      runningScope = null;
       currentState.setRemoteControlStatus({
+        activeControllerName: '',
         clientCount: 0,
+        pairingCode: '',
         running: false,
         urls: [],
       });
@@ -517,7 +524,8 @@ const applySettings = async () => {
   if (
     runningPort === wantedPort &&
     runningRequirePin === requirePin &&
-    runningPin === (pin ?? null)
+    runningPin === (pin ?? null) &&
+    runningScope === scope
   ) {
     return;
   }
@@ -526,13 +534,17 @@ const applySettings = async () => {
     pin,
     port: wantedPort,
     requirePin,
+    scope,
   });
 
   if (!status.running) {
     runningPort = null;
     runningPin = null;
+    runningScope = null;
     currentState.setRemoteControlStatus({
+      activeControllerName: '',
       clientCount: 0,
+      pairingCode: '',
       running: false,
       urls: [],
     });
@@ -543,14 +555,90 @@ const applySettings = async () => {
   runningPort = wantedPort;
   runningPin = pin ?? null;
   runningRequirePin = requirePin;
+  runningScope = scope;
   currentState.setRemoteControlStatus({
+    activeControllerName: status.activeControllerName || '',
     clientCount: status.clientCount,
-    pin: status.pin,
+    pairingCode: status.pairingCode,
+    pin: pin ?? '',
     running: true,
     urls: status.urls,
   });
   log('Remote control server started', 'remoteControl', 'info', status.urls);
   broadcastRemoteControlState();
+};
+
+export const revokeRemoteControlDevice = async (deviceId: string) => {
+  try {
+    await globalThis.electronApi.revokeRemoteControlSession(deviceId);
+    const status = await globalThis.electronApi.getRemoteControlStatus();
+    useCurrentStateStore().setRemoteControlStatus({
+      activeControllerDeviceId: status.activeControllerDeviceId || '',
+      activeControllerName: status.activeControllerName || '',
+      clientCount: status.clientCount,
+      pairingCode: status.pairingCode,
+    });
+  } catch (error) {
+    errorCatcher(error, {
+      contexts: { fn: { deviceId, name: 'revokeRemoteControlDevice' } },
+    });
+  }
+};
+
+export const removeActiveController = async (): Promise<void> => {
+  try {
+    await globalThis.electronApi.revokeActiveRemoteController();
+    const status = await globalThis.electronApi.getRemoteControlStatus();
+    useCurrentStateStore().setRemoteControlStatus({
+      activeControllerDeviceId: status.activeControllerDeviceId || '',
+      activeControllerName: status.activeControllerName || '',
+      clientCount: status.clientCount,
+      pairingCode: status.pairingCode,
+    });
+  } catch (error) {
+    errorCatcher(error, {
+      contexts: { fn: { name: 'removeActiveController' } },
+    });
+  }
+};
+
+export const disconnectAllRemoteControlDevices = async () => {
+  try {
+    await globalThis.electronApi.disconnectAllRemoteControlClients();
+    const status = await globalThis.electronApi.getRemoteControlStatus();
+    useCurrentStateStore().setRemoteControlStatus({
+      activeControllerDeviceId: '',
+      activeControllerName: '',
+      clientCount: 0,
+      pairingCode: status.pairingCode,
+    });
+  } catch (error) {
+    errorCatcher(error, {
+      contexts: { fn: { name: 'disconnectAllRemoteControlDevices' } },
+    });
+  }
+};
+
+export const generateNewPairingCode = async (
+  customCode?: string,
+): Promise<string> => {
+  try {
+    const status =
+      await globalThis.electronApi.regenerateRemoteControlPairingCode(
+        customCode,
+      );
+    useCurrentStateStore().setRemoteControlStatus({
+      activeControllerName: status.activeControllerName || '',
+      clientCount: status.clientCount,
+      pairingCode: status.pairingCode,
+    });
+    return status.pairingCode;
+  } catch (error) {
+    errorCatcher(error, {
+      contexts: { fn: { customCode, name: 'generateNewPairingCode' } },
+    });
+    return '';
+  }
 };
 
 export const syncRemoteControl = async () => {
@@ -570,6 +658,10 @@ export const initRemoteControl = (): (() => void) => {
     removeActionListener();
     removeActionListener = null;
   }
+  if (removeStatusListener) {
+    removeStatusListener();
+    removeStatusListener = null;
+  }
 
   removeActionListener = globalThis.electronApi.onRemoteControlAction(
     (action) => {
@@ -577,10 +669,30 @@ export const initRemoteControl = (): (() => void) => {
     },
   );
 
+  if (globalThis.electronApi?.onRemoteControlStatusChanged) {
+    removeStatusListener = globalThis.electronApi.onRemoteControlStatusChanged(
+      (status) => {
+        useCurrentStateStore().setRemoteControlStatus({
+          activeControllerDeviceId: status.activeControllerDeviceId || '',
+          activeControllerName: status.activeControllerName || '',
+          clientCount: status.clientCount,
+          pairingCode: status.pairingCode,
+          port: status.port,
+          running: status.running,
+          urls: status.urls,
+        });
+      },
+    );
+  }
+
   return () => {
     if (removeActionListener) {
       removeActionListener();
       removeActionListener = null;
+    }
+    if (removeStatusListener) {
+      removeStatusListener();
+      removeStatusListener = null;
     }
   };
 };
@@ -590,10 +702,15 @@ export const __testables = {
     runningPort = null;
     runningPin = null;
     runningRequirePin = true;
+    runningScope = null;
     syncInProgress = null;
     if (removeActionListener) {
       removeActionListener();
       removeActionListener = null;
+    }
+    if (removeStatusListener) {
+      removeStatusListener();
+      removeStatusListener = null;
     }
   },
 };

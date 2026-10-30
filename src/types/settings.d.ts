@@ -171,6 +171,7 @@ export type SettingsItemListKey =
   | 'jwLanguages'
   | 'obsAllScenes'
   | 'obsScenes'
+  | 'remoteControlScopes'
   | 'resolutions'
   | 'timerCountdownDisplayFormats'
   | 'timerDisplayFormats'
@@ -319,6 +320,7 @@ export interface SettingsValues {
   remoteControlPin: string;
   remoteControlPort: null | string;
   remoteControlRequirePin: boolean;
+  remoteControlScope: 'full' | 'partial';
   resetFeatureSuggestions: null;
   reSyncMeetingScheduleButton: boolean;
   shortcutMediaNext: null | string;

@@ -51,6 +51,7 @@ export const electronApi: ElectronApi = {
   },
   decryptSecretSync: (cipherText) => cipherText,
   dirname,
+  disconnectAllRemoteControlClients: async () => void 0,
   downloadFile: function (url, saveDir, destFilename, lowPriority) {
     throw new Error('Function not implemented.');
   },
@@ -91,10 +92,11 @@ export const electronApi: ElectronApi = {
   },
   getRemoteControlStatus: async () => ({
     clientCount: 0,
-    pin: '1234',
+    pairedSessions: [],
+    pairingCode: '123456',
     port: 8080,
-    requirePin: true,
     running: false,
+    scope: 'partial',
     urls: [],
   }),
   getScreenAccessStatus: function () {
@@ -182,6 +184,9 @@ export const electronApi: ElectronApi = {
   onRemoteControlAction: function () {
     return () => void 0;
   },
+  onRemoteControlStatusChanged: function () {
+    return () => void 0;
+  },
   onShortcut: function (callback) {
     throw new Error('Function not implemented.');
   },
@@ -248,6 +253,16 @@ export const electronApi: ElectronApi = {
     throw new Error('Function not implemented.');
   },
   readdir: readDirectory,
+  regenerateRemoteControlPairingCode: async () => ({
+    activeControllerName: '',
+    clientCount: 0,
+    pairedSessions: [],
+    pairingCode: '654321',
+    port: 8080,
+    running: true,
+    scope: 'partial' as const,
+    urls: ['http://192.168.1.50:8080/'],
+  }),
   registerShortcut: function (name, shortcut) {
     throw new Error('Function not implemented.');
   },
@@ -262,6 +277,8 @@ export const electronApi: ElectronApi = {
   resumeAllDownloads: function () {
     throw new Error('Function not implemented.');
   },
+  revokeActiveRemoteController: async () => void 0,
+  revokeRemoteControlSession: async () => void 0,
   saveFileDialog: function (defaultPath, filter) {
     throw new Error('Function not implemented.');
   },
@@ -292,10 +309,11 @@ export const electronApi: ElectronApi = {
   showFileOnWindows: async () => undefined,
   startRemoteControl: async () => ({
     clientCount: 0,
-    pin: '1234',
+    pairedSessions: [],
+    pairingCode: '123456',
     port: 8080,
-    requirePin: true,
     running: true,
+    scope: 'partial',
     urls: ['http://127.0.0.1:8080/'],
   }),
   startTimerRemote: async () => ({ running: true, urls: [] }),

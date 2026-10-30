@@ -146,6 +146,40 @@
       .btn-badge-action:active {
         background: rgba(255, 255, 255, 0.4);
       }
+      .btn-logout {
+        background: rgba(218, 54, 51, 0.2);
+        border: 1px solid rgba(218, 54, 51, 0.5);
+        color: #ff7b72;
+        border-radius: 999px;
+        padding: 3px 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-weight: 600;
+        font-size: 0.72rem;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .btn-logout:active {
+        background: rgba(218, 54, 51, 0.4);
+      }
+      .btn-logout-footer {
+        width: auto;
+        height: 44px;
+        border-radius: 12px;
+        padding: 0 20px;
+        gap: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #ff7b72;
+        background: rgba(218, 54, 51, 0.12);
+        border: 1px solid rgba(218, 54, 51, 0.35);
+        margin: 0 auto;
+        cursor: pointer;
+      }
+      .btn-logout-footer:active {
+        background: rgba(218, 54, 51, 0.3);
+      }
 
       main {
         flex: 1;
@@ -498,75 +532,6 @@
         opacity: 0.85;
         flex-shrink: 0;
       }
-      .playlist-folder {
-        border: 1px solid var(--card-border);
-        background: rgba(22, 27, 34, 0.6);
-        border-radius: 12px;
-        overflow: hidden;
-        margin-bottom: 4px;
-      }
-      .playlist-folder-header {
-        padding: 10px 12px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        cursor: pointer;
-        background: #161b22;
-        user-select: none;
-        transition: background 0.2s;
-      }
-      .playlist-folder-header:active {
-        background: #21262d;
-      }
-      .folder-title-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        min-width: 0;
-        flex: 1;
-      }
-      .folder-chevron {
-        width: 16px;
-        height: 16px;
-        fill: currentColor;
-        color: var(--text-muted);
-        transition: transform 0.2s ease;
-        flex-shrink: 0;
-      }
-      .playlist-folder.collapsed .folder-chevron {
-        transform: rotate(-90deg);
-      }
-      .folder-icon {
-        font-size: 0.95rem;
-        flex-shrink: 0;
-      }
-      .folder-title {
-        font-weight: 600;
-        font-size: 0.88rem;
-        color: var(--text-main);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .folder-count {
-        font-size: 0.72rem;
-        color: var(--text-muted);
-        background: #0d1117;
-        padding: 2px 7px;
-        border-radius: 999px;
-        margin-left: 6px;
-        flex-shrink: 0;
-      }
-      .playlist-folder-content {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        padding: 8px;
-        border-top: 1px solid var(--card-border);
-      }
-      .playlist-folder.collapsed .playlist-folder-content {
-        display: none !important;
-      }
       .playlist-item {
         display: flex;
         align-items: center;
@@ -754,6 +719,22 @@
         <span>M³ Remote</span>
       </div>
       <div class="status-badges">
+        <div id="controllerBadge" class="badge" title="Control status">
+          <span
+            id="controllerDot"
+            class="badge-dot"
+            style="background-color: #238636; box-shadow: 0 0 8px #238636"
+          ></span>
+          <span id="controllerBadgeText">In Control</span>
+          <button
+            id="btnTakeControl"
+            class="btn-badge-action"
+            type="button"
+            hidden
+          >
+            Take Control
+          </button>
+        </div>
         <div
           id="zoomShareBadge"
           class="badge badge-zoom-share"
@@ -785,10 +766,51 @@
           <span class="badge-dot"></span>
           <span id="connBadgeText">Offline</span>
         </div>
+        <button
+          id="btnLogoutHeader"
+          class="btn-logout"
+          type="button"
+          title="Log out from remote"
+          aria-label="Log out"
+          hidden
+        >
+          <svg
+            viewBox="0 0 24 24"
+            style="width: 13px; height: 13px; fill: currentColor"
+          >
+            <path
+              d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"
+            />
+          </svg>
+          <span>Logout</span>
+        </button>
       </div>
     </header>
 
-    <!-- PIN Modal -->
+    <!-- Toast Notification -->
+    <div
+      id="toastNotification"
+      style="
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(218, 54, 51, 0.95);
+        color: #fff;
+        padding: 10px 18px;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+        z-index: 2000;
+        transition: opacity 0.3s ease;
+        opacity: 0;
+        pointer-events: none;
+      "
+      hidden
+    ></div>
+
+    <!-- Pairing Modal -->
     <div id="pinModal" class="modal-overlay" hidden>
       <div class="modal-card">
         <svg
@@ -804,20 +826,37 @@
         </svg>
         <h2>Pairing Required</h2>
         <p style="color: var(--text-muted); font-size: 0.9rem">
-          Enter the 4-digit PIN displayed on Meeting Media Manager desktop.
+          Enter the 6-digit one-time code displayed on Meeting Media Manager
+          desktop.
         </p>
+        <input
+          id="deviceNameInput"
+          class="pin-input"
+          style="
+            width: 100%;
+            height: 42px;
+            font-size: 0.95rem;
+            letter-spacing: normal;
+            margin-bottom: 6px;
+            text-align: left;
+            padding: 0 12px;
+          "
+          type="text"
+          maxlength="30"
+          placeholder="Device Name (e.g. My Phone)"
+        />
         <input
           id="pinInput"
           class="pin-input"
-          type="password"
+          type="tel"
           pattern="[0-9]*"
           inputmode="numeric"
           maxlength="6"
-          placeholder="••••"
+          placeholder="••••••"
         />
         <div id="pinError" class="pin-error"></div>
         <button id="pinSubmitBtn" class="btn-submit" type="button">
-          Connect
+          Pair Device
         </button>
       </div>
     </div>
@@ -963,6 +1002,33 @@
           </div>
         </div>
       </div>
+
+      <!-- Footer Actions -->
+      <div
+        id="footerLogoutContainer"
+        style="
+          margin-top: 8px;
+          margin-bottom: calc(var(--safe-bottom) + 16px);
+          text-align: center;
+        "
+        hidden
+      >
+        <button
+          id="btnFooterLogout"
+          class="btn-ctrl btn-logout-footer"
+          type="button"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            style="width: 18px; height: 18px; fill: currentColor"
+          >
+            <path
+              d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"
+            />
+          </svg>
+          <span>Log Out & Disconnect</span>
+        </button>
+      </div>
     </main>
 
     <script>
@@ -972,7 +1038,7 @@
         // State
         let socket = null;
         let authenticated = false;
-        let currentPin = '';
+        let commandSeq = 0;
         let reconnectAttempts = 0;
         let reconnectTimer = null;
         let currentState = null;
@@ -980,24 +1046,53 @@
         let renderedPlaylistSignature = '';
         let lastActiveUniqueId = '';
         let isStoppingZoomShare = false;
+        let toastTimer = null;
 
-        // Extract PIN from URL query param if present
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('pin')) {
-          currentPin = urlParams.get('pin') || '';
-        }
+        const TOKEN_KEY = 'm3_remote_session_token';
+        const DEVICE_KEY = 'm3_remote_device_name';
+        let savedToken = localStorage.getItem(TOKEN_KEY) || '';
 
         // DOM Elements
         const connBadge = document.getElementById('connBadge');
         const connBadgeText = document.getElementById('connBadgeText');
+        const controllerBadge = document.getElementById('controllerBadge');
+        const controllerDot = document.getElementById('controllerDot');
+        const controllerBadgeText = document.getElementById(
+          'controllerBadgeText',
+        );
+        const btnTakeControl = document.getElementById('btnTakeControl');
+        const toastNotification = document.getElementById('toastNotification');
         const blackoutBadge = document.getElementById('blackoutBadge');
         const blackoutBadgeText = document.getElementById('blackoutBadgeText');
         const zoomShareBadge = document.getElementById('zoomShareBadge');
         const btnStopZoomShare = document.getElementById('btnStopZoomShare');
         const pinModal = document.getElementById('pinModal');
+        const deviceNameInput = document.getElementById('deviceNameInput');
         const pinInput = document.getElementById('pinInput');
         const pinError = document.getElementById('pinError');
         const pinSubmitBtn = document.getElementById('pinSubmitBtn');
+        const btnLogoutHeader = document.getElementById('btnLogoutHeader');
+        const btnFooterLogout = document.getElementById('btnFooterLogout');
+        const footerLogoutContainer = document.getElementById(
+          'footerLogoutContainer',
+        );
+
+        function getSuggestedDeviceName() {
+          const ua = navigator.userAgent;
+          if (/iPad/i.test(ua)) return 'iPad';
+          if (/iPhone/i.test(ua)) return 'iPhone';
+          if (/Android/i.test(ua)) return 'Android Device';
+          if (/Macintosh/i.test(ua)) return 'Mac';
+          if (/Windows/i.test(ua)) return 'Windows PC';
+          return 'Mobile Device';
+        }
+
+        const savedDeviceName = localStorage.getItem(DEVICE_KEY);
+        if (savedDeviceName && deviceNameInput) {
+          deviceNameInput.value = savedDeviceName;
+        } else if (deviceNameInput && !deviceNameInput.value) {
+          deviceNameInput.value = getSuggestedDeviceName();
+        }
 
         const mediaTypeTag = document.getElementById('mediaTypeTag');
         const mediaPlaybackState =
@@ -1030,7 +1125,6 @@
           document.getElementById('btnRefreshPlaylist');
         const iconRefresh = document.getElementById('iconRefresh');
 
-        const collapsedFolders = new Set();
         const collapsedSections = new Set();
         let hasInitializedSectionFolding = false;
 
@@ -1061,10 +1155,40 @@
           }
         }
 
+        function showToast(msg) {
+          if (!toastNotification) return;
+          toastNotification.textContent = msg;
+          toastNotification.hidden = false;
+          toastNotification.style.opacity = '1';
+          if (toastTimer) clearTimeout(toastTimer);
+          toastTimer = setTimeout(function () {
+            toastNotification.style.opacity = '0';
+            setTimeout(function () {
+              toastNotification.hidden = true;
+            }, 300);
+          }, 3200);
+        }
+
         function sendCommand(action) {
           vibrate();
           if (!socket || socket.readyState !== WebSocket.OPEN) return;
-          socket.send(JSON.stringify({ type: 'action', action: action }));
+          if (currentState && currentState.controllerMode === 'viewer') {
+            showToast(
+              'You are in spectator mode. Tap "Take Control" above to control media.',
+            );
+            return;
+          }
+          commandSeq++;
+          const cmdId =
+            'cmd-' + Date.now() + '-' + Math.floor(Math.random() * 10000);
+          socket.send(
+            JSON.stringify({
+              action: action,
+              id: cmdId,
+              seq: commandSeq,
+              type: 'action',
+            }),
+          );
         }
 
         function connect() {
@@ -1076,16 +1200,15 @@
 
           updateConnectionStatus('reconnecting');
           const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-          const wsUrl =
-            `${proto}//${location.host}/ws` +
-            (currentPin ? `?pin=${encodeURIComponent(currentPin)}` : '');
+          const wsUrl = `${proto}//${location.host}/ws`;
 
           socket = new WebSocket(wsUrl);
 
           socket.onopen = function () {
             reconnectAttempts = 0;
-            if (currentPin) {
-              socket.send(JSON.stringify({ type: 'auth', pin: currentPin }));
+            savedToken = localStorage.getItem(TOKEN_KEY) || '';
+            if (savedToken) {
+              socket.send(JSON.stringify({ token: savedToken, type: 'auth' }));
             }
           };
 
@@ -1122,22 +1245,56 @@
         function handleMessage(msg) {
           switch (msg.type) {
             case 'auth_required':
-              authenticated = false;
-              pinModal.hidden = false;
-              pinError.textContent = msg.message || '';
+              savedToken = localStorage.getItem(TOKEN_KEY) || '';
+              if (savedToken) {
+                socket.send(
+                  JSON.stringify({ token: savedToken, type: 'auth' }),
+                );
+              } else {
+                authenticated = false;
+                if (btnLogoutHeader) btnLogoutHeader.hidden = true;
+                if (footerLogoutContainer) footerLogoutContainer.hidden = true;
+                pinModal.hidden = false;
+                pinError.textContent = msg.message || '';
+              }
               break;
 
             case 'auth_success':
               authenticated = true;
+              if (msg.token) {
+                savedToken = msg.token;
+                localStorage.setItem(TOKEN_KEY, msg.token);
+              }
+              if (btnLogoutHeader) btnLogoutHeader.hidden = false;
+              if (footerLogoutContainer) footerLogoutContainer.hidden = false;
               pinModal.hidden = true;
               pinError.textContent = '';
               updateConnectionStatus('connected');
+              if (currentState) {
+                renderState(currentState);
+              }
               break;
 
             case 'auth_error':
               authenticated = false;
+              if (btnLogoutHeader) btnLogoutHeader.hidden = true;
+              if (footerLogoutContainer) footerLogoutContainer.hidden = true;
               pinModal.hidden = false;
-              pinError.textContent = msg.message || 'Invalid PIN';
+              pinError.textContent = msg.message || 'Invalid pairing code';
+              if (
+                msg.message &&
+                (msg.message.includes('revoked') ||
+                  msg.message.includes('expired'))
+              ) {
+                localStorage.removeItem(TOKEN_KEY);
+                savedToken = '';
+              }
+              break;
+
+            case 'ack':
+              if (!msg.success && msg.error) {
+                showToast(msg.error);
+              }
               break;
 
             case 'state_change':
@@ -1150,6 +1307,33 @@
           if (!state) return;
           currentState = state;
           updateConnectionStatus('connected');
+
+          // Controller status
+          if (state.controllerMode === 'controller') {
+            controllerBadge.className = 'badge';
+            controllerDot.style.backgroundColor = '#238636';
+            controllerDot.style.boxShadow = '0 0 8px #238636';
+            controllerBadgeText.textContent = 'In Control';
+            btnTakeControl.hidden = true;
+          } else {
+            controllerBadge.className = 'badge';
+            controllerDot.style.backgroundColor = '#d29922';
+            controllerDot.style.boxShadow = '0 0 8px #d29922';
+            controllerBadgeText.textContent = state.activeControllerName
+              ? 'By ' + state.activeControllerName
+              : 'Spectator';
+            btnTakeControl.hidden = false;
+          }
+
+          // Scope enforcement
+          if (state.scope === 'partial') {
+            blackoutBadge.hidden = true;
+            btnBlackoutToggle.parentElement.hidden = true;
+            zoomShareBadge.hidden = true;
+          } else {
+            blackoutBadge.hidden = false;
+            btnBlackoutToggle.parentElement.hidden = false;
+          }
 
           // Blackout / Window visibility
           const isScreenVisible = !!state.mediaWindowVisible;
@@ -1164,7 +1348,11 @@
           }
 
           // Zoom Sharing status
-          if (state.zoomSharing && !isStoppingZoomShare) {
+          if (
+            state.scope !== 'partial' &&
+            state.zoomSharing &&
+            !isStoppingZoomShare
+          ) {
             zoomShareBadge.hidden = false;
           } else {
             zoomShareBadge.hidden = true;
@@ -1194,9 +1382,13 @@
 
           // Artwork display
           if (state.thumbnailUrl && (state.isPlaying || state.isPaused)) {
-            if (mediaArt.getAttribute('data-src') !== state.thumbnailUrl) {
-              mediaArt.setAttribute('data-src', state.thumbnailUrl);
-              mediaArt.src = state.thumbnailUrl;
+            let artSrc = state.thumbnailUrl;
+            if (artSrc.indexOf('/api/thumbnail') !== -1 && savedToken) {
+              artSrc += '&token=' + encodeURIComponent(savedToken);
+            }
+            if (mediaArt.getAttribute('data-src') !== artSrc) {
+              mediaArt.setAttribute('data-src', artSrc);
+              mediaArt.src = artSrc;
             }
           } else {
             mediaArt.removeAttribute('data-src');
@@ -1246,9 +1438,13 @@
 
           let thumbHtml = '';
           if (item.thumbnailUrl) {
+            let itemThumbSrc = item.thumbnailUrl;
+            if (itemThumbSrc.indexOf('/api/thumbnail') !== -1 && savedToken) {
+              itemThumbSrc += '&token=' + encodeURIComponent(savedToken);
+            }
             thumbHtml = `
               <div class="playlist-thumb-wrap">
-                <img class="playlist-thumb" src="${escapeHtml(item.thumbnailUrl)}" loading="lazy" alt="" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
+                <img class="playlist-thumb" src="${escapeHtml(itemThumbSrc)}" loading="lazy" alt="" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
                 <div class="playlist-thumb-fallback" style="display:none;">${typeIcon}</div>
               </div>`;
           } else {
@@ -1309,25 +1505,28 @@
             return;
           }
 
-          const currentSignature = playlist
-            .map(function (it) {
-              return (
-                (it.uniqueId || '') +
-                ':' +
-                (it.title || '') +
-                ':' +
-                (it.isDivider ? '1' : '0') +
-                ':' +
-                (it.groupId || '') +
-                ':' +
-                (it.groupTitle || '') +
-                ':' +
-                (it.sectionId || it.section || '') +
-                ':' +
-                (it.thumbnailUrl || '')
-              );
-            })
-            .join('|');
+          const currentSignature =
+            playlist
+              .map(function (it) {
+                return (
+                  (it.uniqueId || '') +
+                  ':' +
+                  (it.title || '') +
+                  ':' +
+                  (it.isDivider ? '1' : '0') +
+                  ':' +
+                  (it.groupId || '') +
+                  ':' +
+                  (it.groupTitle || '') +
+                  ':' +
+                  (it.sectionId || it.section || '') +
+                  ':' +
+                  (it.thumbnailUrl || '')
+                );
+              })
+              .join('|') +
+            ':' +
+            (savedToken ? 'auth' : 'noauth');
 
           // If the playlist structure hasn't changed, only update active styling without re-rendering DOM
           if (currentSignature === renderedPlaylistSignature) {
@@ -1345,17 +1544,13 @@
                     badge.textContent = 'PLAYING';
                     el.appendChild(badge);
                   }
-                  // Auto-uncollapse parent section or folder if newly active
+                  // Auto-uncollapse parent section if newly active
                   let parent = el.parentElement;
                   while (parent && parent !== playlistItems) {
                     if (parent.classList.contains('playlist-section')) {
                       parent.classList.remove('collapsed');
                       const sKey = parent.getAttribute('data-section-key');
                       if (sKey) collapsedSections.delete(sKey);
-                    } else if (parent.classList.contains('playlist-folder')) {
-                      parent.classList.remove('collapsed');
-                      const fId = parent.getAttribute('data-folder-id');
-                      if (fId) collapsedFolders.delete(fId);
                     }
                     parent = parent.parentElement;
                   }
@@ -1371,11 +1566,10 @@
 
           renderedPlaylistSignature = currentSignature;
 
-          // If the active item changed to a new item, auto-expand its section and folder
+          // If the active item changed to a new item, auto-expand its section
           if (activeUniqueId) {
             playlist.forEach(function (it) {
               if (it.uniqueId === activeUniqueId) {
-                if (it.groupId) collapsedFolders.delete(it.groupId);
                 const secKey = it.sectionId || it.section;
                 if (secKey) collapsedSections.delete(secKey);
               }
@@ -1456,15 +1650,9 @@
             const sectionContent = document.createElement('div');
             sectionContent.className = 'playlist-section-content';
 
-            let currentFolderId = null;
-            let currentFolderContent = null;
-            let folderItemCount = 0;
-            let folderCountBadge = null;
-
             secData.items.forEach(function (item) {
               // Divider
               if (item.isDivider) {
-                currentFolderId = null;
                 const divEl = document.createElement('div');
                 divEl.className = 'playlist-divider';
                 divEl.innerHTML = `
@@ -1476,67 +1664,8 @@
               }
 
               const isActive = item.uniqueId === activeUniqueId;
-
-              // Foldable folder / group handling
-              if (item.groupId) {
-                if (item.groupId !== currentFolderId) {
-                  currentFolderId = item.groupId;
-                  const thisGroupId = item.groupId;
-                  folderItemCount = 0;
-
-                  const folderContainer = document.createElement('div');
-                  const isCollapsed = collapsedFolders.has(thisGroupId);
-                  folderContainer.className =
-                    'playlist-folder' + (isCollapsed ? ' collapsed' : '');
-                  folderContainer.setAttribute('data-folder-id', thisGroupId);
-
-                  const folderHeader = document.createElement('div');
-                  folderHeader.className = 'playlist-folder-header';
-                  folderHeader.innerHTML = `
-                  <div class="folder-title-row">
-                    <svg class="folder-chevron" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
-                    <span class="folder-icon">📁</span>
-                    <span class="folder-title">${escapeHtml(item.groupTitle || 'Folder')}</span>
-                    <span class="folder-count">0</span>
-                  </div>
-                `;
-
-                  const countBadge =
-                    folderHeader.querySelector('.folder-count');
-                  folderCountBadge = countBadge;
-
-                  const folderContent = document.createElement('div');
-                  folderContent.className = 'playlist-folder-content';
-                  currentFolderContent = folderContent;
-
-                  folderHeader.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    if (collapsedFolders.has(thisGroupId)) {
-                      collapsedFolders.delete(thisGroupId);
-                      folderContainer.classList.remove('collapsed');
-                    } else {
-                      collapsedFolders.add(thisGroupId);
-                      folderContainer.classList.add('collapsed');
-                    }
-                  });
-
-                  folderContainer.appendChild(folderHeader);
-                  folderContainer.appendChild(folderContent);
-                  sectionContent.appendChild(folderContainer);
-                }
-
-                folderItemCount++;
-                if (folderCountBadge) {
-                  folderCountBadge.textContent = folderItemCount.toString();
-                }
-
-                const el = createPlaylistItemElement(item, isActive);
-                currentFolderContent.appendChild(el);
-              } else {
-                currentFolderId = null;
-                const el = createPlaylistItemElement(item, isActive);
-                sectionContent.appendChild(el);
-              }
+              const el = createPlaylistItemElement(item, isActive);
+              sectionContent.appendChild(el);
             });
 
             sectionContainer.appendChild(sectionHeader);
@@ -1639,25 +1768,82 @@
           }, 300);
         });
 
-        // PIN submission
-        function submitPin() {
-          const pin = pinInput.value.trim();
-          if (!pin) {
-            pinError.textContent = 'Please enter a PIN';
+        // Take Control button
+        if (btnTakeControl) {
+          btnTakeControl.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (!socket || socket.readyState !== WebSocket.OPEN) return;
+            commandSeq++;
+            const cmdId =
+              'cmd-' + Date.now() + '-' + Math.floor(Math.random() * 10000);
+            socket.send(
+              JSON.stringify({
+                id: cmdId,
+                seq: commandSeq,
+                type: 'take_control',
+              }),
+            );
+          });
+        }
+
+        // Pairing submission
+        function submitPairing() {
+          const code = pinInput.value.trim();
+          const devName =
+            (deviceNameInput.value || '').trim() || 'Mobile Device';
+          if (!code || code.length < 6) {
+            pinError.textContent = 'Please enter the 6-digit pairing code';
             return;
           }
-          currentPin = pin;
+          localStorage.setItem(DEVICE_KEY, devName);
           if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({ type: 'auth', pin: pin }));
+            socket.send(
+              JSON.stringify({ code: code, deviceName: devName, type: 'pair' }),
+            );
           } else {
             connect();
           }
         }
 
-        pinSubmitBtn.addEventListener('click', submitPin);
+        pinSubmitBtn.addEventListener('click', submitPairing);
         pinInput.addEventListener('keydown', function (e) {
-          if (e.key === 'Enter') submitPin();
+          if (e.key === 'Enter') submitPairing();
         });
+        if (deviceNameInput) {
+          deviceNameInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') pinInput.focus();
+          });
+        }
+
+        function performLogout() {
+          if (
+            confirm('Disconnect and log out this device from remote control?')
+          ) {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+              try {
+                socket.send(JSON.stringify({ type: 'logout' }));
+              } catch (e) {}
+            }
+            localStorage.removeItem(TOKEN_KEY);
+            savedToken = '';
+            authenticated = false;
+            currentState = null;
+            if (btnLogoutHeader) btnLogoutHeader.hidden = true;
+            if (footerLogoutContainer) footerLogoutContainer.hidden = true;
+            updateConnectionStatus('disconnected');
+            pinModal.hidden = false;
+            pinInput.value = '';
+            pinError.textContent = '';
+            showToast('Logged out successfully');
+          }
+        }
+
+        if (btnLogoutHeader) {
+          btnLogoutHeader.addEventListener('click', performLogout);
+        }
+        if (btnFooterLogout) {
+          btnFooterLogout.addEventListener('click', performLogout);
+        }
 
         // Start initial connection
         connect();

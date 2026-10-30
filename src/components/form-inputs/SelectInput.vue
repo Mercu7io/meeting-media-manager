@@ -278,6 +278,11 @@ const listOptions = computed(
         return filteredTimerCountdownDisplayFormats.value;
       } else if (props.list === 'timerHourFormats') {
         return filteredTimerHourFormats.value;
+      } else if (props.list === 'remoteControlScopes') {
+        return [
+          { label: t('remote-control-scope-partial'), value: 'partial' },
+          { label: t('remote-control-scope-full'), value: 'full' },
+        ];
       } else {
         throw new Error('List not found: ' + props.list);
       }

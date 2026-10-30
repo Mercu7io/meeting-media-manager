@@ -99,29 +99,10 @@ app.on('web-contents-created', (_event, contents) => {
     }
   });
 
-  const isAllowedLocalUrl = (url: string): boolean => {
-    try {
-      const parsed = new URL(url);
-      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
-        const h = parsed.hostname;
-        return (
-          h === 'localhost' ||
-          h === '127.0.0.1' ||
-          h.startsWith('192.168.') ||
-          h.startsWith('10.') ||
-          h.startsWith('172.')
-        );
-      }
-    } catch {
-      return false;
-    }
-    return false;
-  };
-
   // Disable or limit creation of new windows
   // See: https://www.electronjs.org/docs/latest/tutorial/security#14-disable-or-limit-creation-of-new-windows
   contents.setWindowOpenHandler(({ url }) => {
-    if (isTrustedNavigationTarget(url) || isAllowedLocalUrl(url)) {
+    if (isTrustedNavigationTarget(url)) {
       setImmediate(() => {
         shell.openExternal(url).catch((error: unknown) => {
           captureElectronError(error, {

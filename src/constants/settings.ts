@@ -588,6 +588,13 @@ export const settingsDefinitions: SettingsItems = {
     subgroup: 'remoteControl',
     type: 'text',
   },
+  remoteControlScope: {
+    depends: 'enableRemoteControl',
+    group: 'integrations',
+    list: 'remoteControlScopes',
+    subgroup: 'remoteControl',
+    type: 'list',
+  },
   remoteControlRequirePin: {
     depends: 'enableRemoteControl',
     group: 'integrations',
@@ -1288,6 +1295,7 @@ export const defaultSettings: SettingsValues = {
   remoteControlPin: '1234',
   remoteControlPort: '8080',
   remoteControlRequirePin: true,
+  remoteControlScope: 'partial',
   resetFeatureSuggestions: null,
   reSyncMeetingScheduleButton: false,
   shortcutMediaNext: null,

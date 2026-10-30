@@ -90,6 +90,8 @@ const electronApi: ElectronApi = {
     invoke('createVideoFromNonVideo', f, fP, oD),
   decryptSecretSync: (cipherText) => sendSync('decryptSecretSync', cipherText),
   dirname,
+  disconnectAllRemoteControlClients: () =>
+    invoke('disconnectAllRemoteControlClients'),
   downloadFile: (u, sD, dF, lP) => invoke('downloadFile', u, sD, dF, lP),
   encryptSecretSync: (plainText) => sendSync('encryptSecretSync', plainText),
   ensureMacosFolderPermission: (folderPath, prompt) =>
@@ -154,6 +156,8 @@ const electronApi: ElectronApi = {
   onMediaWindowRendererGone: (cb) => listen('media-window-renderer-gone', cb),
   onPathProbeNetworkWarning: (cb) => listen('pathProbeNetworkWarning', cb),
   onRemoteControlAction: (cb) => listen('remote-control:action', cb),
+  onRemoteControlStatusChanged: (cb) =>
+    listen('remote-control:status-changed', cb),
   onShortcut: (cb) => listen('shortcut', cb),
   onTimerWindowClosed: (cb) => listen('timerWindowClosed', cb),
   onUpdateAvailable: (cb) => listen('update-available', cb),
@@ -180,6 +184,8 @@ const electronApi: ElectronApi = {
   PLATFORM,
   quitAndInstall: () => send('quitAndInstall'),
   readdir: readDirectory,
+  regenerateRemoteControlPairingCode: (customCode?: string) =>
+    invoke('regenerateRemoteControlPairingCode', customCode),
   registerShortcut: (n, s) =>
     invokeWithoutResult('registerShortcut', 'registerShortcut', n, s),
   relaunchApp: () => send('relaunchApp'),
@@ -187,6 +193,9 @@ const electronApi: ElectronApi = {
   resolve,
   restartZoomHelper: () => invoke('restartZoomHelper'),
   resumeAllDownloads: () => send('resumeAllDownloads'),
+  revokeActiveRemoteController: () => invoke('revokeActiveRemoteController'),
+  revokeRemoteControlSession: (deviceId: string) =>
+    invoke('revokeRemoteControlSession', deviceId),
   saveFileDialog: (d, f) => invoke('saveFileDialog', d, f),
   sendDevMenuState: (state) => send('dev-menu-state', state),
   sendKeyTap: (k, m) => sendKeyTap(k, m),

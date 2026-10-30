@@ -1858,6 +1858,7 @@ watchImmediate(
     currentSettings.value?.remoteControlPort,
     currentSettings.value?.remoteControlRequirePin,
     currentSettings.value?.remoteControlPin,
+    currentSettings.value?.remoteControlScope,
   ],
   () => {
     void syncRemoteControl();
