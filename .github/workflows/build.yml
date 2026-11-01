@@ -16,23 +16,23 @@ on:
         default: ''
     secrets:
       APPLE_APP_SPECIFIC_PASSWORD:
-        required: true
+        required: false
       APPLE_ID:
-        required: true
+        required: false
       APPLE_TEAM_ID:
-        required: true
+        required: false
       KEYCHAIN_PASSWORD:
-        required: true
+        required: false
       MAC_CERTIFICATE_BASE64:
-        required: true
+        required: false
       MAC_CERTIFICATE_PASSWORD:
-        required: true
+        required: false
       SENTRY_AUTH_TOKEN:
-        required: true
+        required: false
       SENTRY_DSN:
-        required: true
+        required: false
       SONAR_TOKEN:
-        required: true
+        required: false
 
 jobs:
   sonarqube:
@@ -155,7 +155,7 @@ jobs:
       - name: Install dependencies
         run: yarn install # NOSONAR: the release build keeps dependency build scripts on (robotjs/ttf2woff2 native addons, sentry-cli binary check); CI only installs the immutable, checksum-verified yarn.lock
       - name: Install Apple certificate
-        if: runner.os == 'macOS' && github.actor != 'dependabot[bot]'
+        if: runner.os == 'macOS' && github.actor != 'dependabot[bot]' && env.MAC_CERTIFICATE_BASE64 != ''
         env:
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
           MAC_CERTIFICATE_BASE64: ${{ secrets.MAC_CERTIFICATE_BASE64 }}
@@ -177,7 +177,7 @@ jobs:
           security import $CERTIFICATE_PATH -P "$MAC_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
       - name: Run security find-identity -v
-        if: runner.os == 'macOS' && github.actor != 'dependabot[bot]'
+        if: runner.os == 'macOS' && github.actor != 'dependabot[bot]' && env.MAC_CERTIFICATE_BASE64 != ''
         run: security find-identity -v
       - name: Build Electron App
         id: build
@@ -237,7 +237,7 @@ jobs:
           echo "::error::macOS build failed for a reason unrelated to notarization - see the 'Build Electron App' step's log above. Not retrying (that would just fail again while masking the real cause)."
           exit 1
       - name: Clean up keychain and provisioning profile
-        if: always() && runner.os == 'macOS' && github.actor != 'dependabot[bot]'
+        if: always() && runner.os == 'macOS' && github.actor != 'dependabot[bot]' && env.MAC_CERTIFICATE_BASE64 != ''
         run: |
           rm -f $RUNNER_TEMP/build_certificate.p12
           security delete-keychain $RUNNER_TEMP/app-signing.keychain-db

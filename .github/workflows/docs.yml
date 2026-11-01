@@ -79,6 +79,7 @@ jobs:
           path: docs/.vitepress/dist
 
   deploy:
+    if: github.repository == 'sircharlo/meeting-media-manager'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

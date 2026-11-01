@@ -25,3 +25,4 @@
 - Added a quick-disconnect button beside the active controller in the desktop popup to remove and revoke the active controller on demand.
 - Fixed Zoom screen sharing protection during device pairing and stop actions, enabled dynamic real-time remote control scope synchronization, and permitted playlist playback in transport mode.
 - Aligned media stop and window autohide order with upstream, and fixed mobile playlist section flattening by enforcing non-shrinkable headers and section containers.
+- Merged 221 commits from upstream master (v26.11.0), resolved CHANGELOG conflicts, reconciled yarn.lock, fixed timezone sensitivity in API tests, and hardened GitHub Actions workflows for fork builds.

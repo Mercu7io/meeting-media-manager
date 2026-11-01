@@ -10,6 +10,7 @@ on:
 jobs:
   update-notes:
     runs-on: ubuntu-latest
+    if: github.repository == 'sircharlo/meeting-media-manager'
     permissions:
       contents: write
     outputs:
@@ -48,7 +49,7 @@ jobs:
 
   merge-notes:
     needs: update-notes
-    if: needs.update-notes.outputs.has_changes == 'true'
+    if: github.repository == 'sircharlo/meeting-media-manager' && needs.update-notes.outputs.has_changes == 'true'
     uses: ./.github/workflows/pr-creator-and-waiter.yml
     with:
       head: ${{ needs.update-notes.outputs.notes_branch }}

@@ -71,7 +71,7 @@ jobs:
   # automatically: this only flips already-known languages in/out of enabled[].
   merge-langs:
     needs: update-langs
-    if: needs.update-langs.outputs.has_changes == 'true' && needs.update-langs.outputs.has_placeholder == 'false'
+    if: github.repository == 'sircharlo/meeting-media-manager' && needs.update-langs.outputs.has_changes == 'true' && needs.update-langs.outputs.has_placeholder == 'false'
     uses: ./.github/workflows/pr-creator-and-waiter.yml
     with:
       head: ${{ needs.update-langs.outputs.branch }}
@@ -85,7 +85,7 @@ jobs:
   # PR for review instead of auto-merging.
   review-langs:
     needs: update-langs
-    if: needs.update-langs.outputs.has_changes == 'true' && needs.update-langs.outputs.has_placeholder == 'true'
+    if: github.repository == 'sircharlo/meeting-media-manager' && needs.update-langs.outputs.has_changes == 'true' && needs.update-langs.outputs.has_placeholder == 'true'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
