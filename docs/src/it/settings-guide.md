@@ -483,9 +483,13 @@ Scegli come accedere al timer dalla finestra principale:
 
 ### Timer remoto {#timer-remote}
 
-<!-- **Settings**: `timerRemoteEnable`, `timerRemotePort` -->
+<!-- **Settings**: `timerRemoteEnable`, `timerRemoteFocusLayout`, `timerRemotePort` -->
 
 Quando è attivato, M³ rende disponibile una copia di sola lettura del display del timer come pagina web sulla rete locale, per un tablet o un telefono sul leggio: l'oratore vede il tempo rimanente senza che compaia sullo schermo della congregazione o nella condivisione Zoom. La pagina segue il timer in tempo reale, compresi il conto alla rovescia prima dell'adunanza, l'orologio, i colori del tempo superato e l'avviso della mano, e tutti i comandi restano in M³.
+
+Con il **layout mirato per il timer remoto** attivo, la pagina mostra il tempo in un grande anello di avanzamento: verde acqua finché c'è tempo, giallo nell'ultimo minuto, poi rosso con il tempo di superamento (`+02:18`). I partecipanti Zoom che hanno alzato la mano sono elencati accanto, nell'ordine in cui l'hanno fatto, i primi quattro per nome e gli altri con un conteggio, e ogni nuova mano fa lampeggiare per qualche secondo un avviso «Mano alzata» mentre le mani restano elencate. La visualizzazione predefinita resta il grande tempo semplice.
+
+Finché la pagina è aperta, mantiene acceso lo schermo del dispositivo, così un tablet sul leggio non si blocca né si oscura a metà parte. Dove il browser non lo consente sull'indirizzo HTTP semplice della pagina, riproduce un video silenzioso per tenere acceso lo schermo.
 
 Gli indirizzi da aprire sul dispositivo sono elencati nel popup del timer, con un pulsante per copiarli. Cambia la porta solo se un altro programma la usa già. Nota che chiunque sia connesso alla stessa rete può aprire la pagina mentre questa opzione è attiva; la pagina mostra solo il timer.
 

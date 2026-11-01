@@ -548,9 +548,11 @@ describe('DialogZoomSetupAssistant', () => {
     await click('Raise and lower my hand');
     expect(zoom.learnZoomHandRaisedPhrase).toHaveBeenLastCalledWith(undefined);
     // Asking is expected, not reported as an error.
-    expect(text()).toContain('M³ needs your help to find its React button');
-    expect(text()).not.toContain("That didn't open Zoom's reactions");
-    expect(text()).toContain("Which of these opens Zoom's reactions?");
+    expect(text()).toContain(
+      'M³ needs your help to find the button that raises your hand',
+    );
+    expect(text()).not.toContain("That didn't raise your hand");
+    expect(text()).toContain('Which of these raises your hand in Zoom?');
     // React is asked for once Zoom has moved it into "More": listed first.
     expect(text().indexOf('In Zoom\'s "More" menu')).toBeLessThan(
       text().indexOf("In Zoom's toolbar"),
@@ -568,12 +570,59 @@ describe('DialogZoomSetupAssistant', () => {
 
     await pick('Partager');
     expect(zoom.learnZoomHandRaisedPhrase).toHaveBeenLastCalledWith('Partager');
-    expect(text()).toContain("That didn't open Zoom's reactions");
+    expect(text()).toContain("That didn't raise your hand");
 
     await pick('Réagir');
     expect(zoom.learnZoomHandRaisedPhrase).toHaveBeenLastCalledWith('Réagir');
     expect(text()).toContain('recognizes raised hands (“Main levée”)');
-    expect(text()).not.toContain("Which of these opens Zoom's reactions?");
+    expect(text()).not.toContain('Which of these raises your hand in Zoom?');
+    expect(isDisabled(button('Continue'))).toBe(false);
+  });
+
+  it("offers Zoom's buttons when raising the hand failed for another reason", async () => {
+    // The hand did move, but M³ didn't see it in the participants list: a
+    // failure that isn't about a missing React button must still let the user
+    // point M³ at Zoom's own button instead of ending the step.
+    zoom.learnZoomHandRaisedPhrase
+      .mockResolvedValueOnce({ error: 'hand-not-raised', ok: false })
+      .mockImplementationOnce(async () => {
+        settings().zoomHandRaisedPhrase = 'Mão levantada';
+        return {
+          handButtonTitle: 'Levantar mão',
+          ok: true,
+          phrase: 'Mão levantada',
+        };
+      });
+    zoom.getZoomShareEntries.mockResolvedValue({
+      more: ['Baixar mão'],
+      toolbar: ['Levantar mão'],
+    });
+    await mountAssistant();
+    await reachVideoStep();
+    await click("Yes, it's on"); // camera
+    await click('Continue');
+    await click("Yes, it's on"); // microphone
+    await click('Continue');
+
+    await click('Raise and lower my hand');
+    // Not the dead end that just tells the user to try again...
+    expect(text()).not.toContain(
+      "couldn't raise your hand in Zoom, or didn't see it",
+    );
+    // ...Zoom's buttons to pick from, as for the Share step.
+    expect(text()).toContain('Which of these raises your hand in Zoom?');
+    expect(isDisabled(button('Continue'))).toBe(true);
+
+    const option = Array.from(document.querySelectorAll('.q-radio')).find(
+      (el) => el.textContent?.includes('Levantar mão'),
+    ) as HTMLElement;
+    option.click();
+    await flushPromises();
+    await click('Try this one');
+    expect(zoom.learnZoomHandRaisedPhrase).toHaveBeenLastCalledWith(
+      'Levantar mão',
+    );
+    expect(text()).toContain('recognizes raised hands (“Mão levantada”)');
     expect(isDisabled(button('Continue'))).toBe(false);
   });
 

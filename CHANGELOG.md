@@ -9,9 +9,35 @@ For translations of the most important changes, see the [`./release-notes/`](./r
 ### ✨ New Features
 
 - ✨ **Remote Control Server & Mobile PWA**: M³ now includes a built-in, lightweight HTTP/WebSocket remote control server and mobile-friendly web controller PWA. Users on the local network (LAN) can connect their smartphone or tablet to monitor playback status, trigger presentation controls (play, pause, stop, previous, next, blackout toggle, seek), and browse or activate items from the meeting queue. The feature includes optional 4-digit PIN authentication, pairing QR code display in the Action Island popup and Settings, and graceful auto-reconnection.
+
+### 🛠️ Improvements and Tweaks
+
 - 🛠️ **Remote Control Active Controller & Pairing Management**: The desktop app now receives live status updates whenever a remote client pairs, connects, disconnects, or relinquishes control, immediately displaying the active controller's name with an on-demand button to disconnect and revoke that active controller. A dedicated "Generate new pairing code" button in the Action Island popup lets operators rotate the pairing PIN on demand, while mobile controller users can now log out and unpair directly from the web interface header or footer.
 - 🛠️ **Remote Control Hardening & Reliability**: The remote control server now features cryptographically secure pairing codes (6-digit one-time code shown on the desktop app, exchanging for a 256-bit device token), strict CSWSH Origin and Host header validation, a strict Content Security Policy (`script-src 'self' 'unsafe-inline'; img-src 'self' data: https:`), single active controller arbitration with spectator mode and handoff controls, command acknowledgements with deduplication, an emergency disconnect-all button, configurable permission scopes (`full` vs `partial`), and direct queue item streaming without nested folder artifacts.
+
+### 🐞 Bug Fixes
+
 - 🐞 **Remote Control & Zoom Isolation**: Restored pure upstream Zoom integration to ensure that remote control device pairing, stops, and actions never interfere with or break automated Zoom media sharing. Scope switching between Transport and Full Control now applies dynamically in real-time across all connected devices, and playlist playback is now enabled in Transport mode.
+
+## v26.11.0
+
+### ✨ New Features
+
+- ✨ **Timer Remote**: The timer page for the tablet at the lectern has an optional focus layout, turned on in Settings. It shows the time in a large progress ring that turns yellow in the last minute, then red with the amount of overtime (+02:18), and lists the Zoom participants whose hand is raised beside it, in the order they raised them: the first four by name, with a count of the rest. Each new hand flashes "Hand raised" for three seconds, and the list updates as hands go up and down. The current display stays the default.
+- ✨ **Zoom Meeting Manager (beta, Windows)**: Raised hands can now be reported without any control over the participants. With "Only tell me about raised hands" turned on (under the raised-hand helper in Settings), M³ still notices who raises their hand, in its notification and on the timer display for the chairman, but shows no buttons that unmute a participant or lower their hand: those are left to the A/V operator in Zoom itself. Useful where Zoom doesn't show the participant controls M³ needs, or where the operator would rather keep control.
+
+### 🛠️ Improvements and Tweaks
+
+- 🛠️ **Zoom Meeting Manager**: M³ can now raise and lower your hand on Zoom accounts where reactions are turned off. Zoom then replaces its React button with a plain "Raise hand" button, in its toolbar or in the "More" menu, which M³ couldn't learn raised hands with before: it now goes through whichever button raises your hand, and when it can't find either, the setup assistant asks you which one it is, listing both. The button is remembered by its name, so learning again goes straight to it.
+- 🛠️ **Zoom Meeting Manager**: The raised-hand step of the setup assistant no longer ends in a dead end when raising and lowering your hand doesn't go as planned: whatever went wrong, it now offers Zoom's toolbar and "More" menu buttons to pick the one that raises your hand from, as it already did when Zoom's React button couldn't be found. This came up on accounts where reactions are turned off, where M³ raises the hand with Zoom's plain "Raise hand" button and Zoom sometimes doesn't show the raised hand in its participants list straight away, so the test failed even though the hand had moved.
+- 🛠️ **Zoom Meeting Manager**: Learning raised hands now works on Zoom versions whose plain "Raise hand" button shows no shortcut in its name (Portuguese "Levantar mão", for one): the button picked in the setup assistant is tried as that button even when M³ had matched its name as a React button, which made the step fail on accounts where reactions are turned off. The step also no longer fails when Zoom is still filling in its participants list, or when a second label appears on your row at the same time as the hand: M³ reads the list once it has settled, watches the host's own row first, and remembers the word that goes away again when the hand goes down.
+- 🛠️ **Timer Remote**: The page keeps the tablet or phone at the lectern awake while it's open, so the screen doesn't lock during a part. It uses the browser's wake lock where the page is allowed to, with a silent looping video as the fallback where it isn't.
+
+### 🔧 Chores
+
+- 🔧 **Zoom Testing**: The local live Zoom test now covers raised hands too (`yarn test:zoom-live`, see [`test/zoom-live/README.md`](./test/zoom-live/README.md)): it learns how Zoom marks a raised hand with reactions on and off, checks that a test participant's raised hand is noticed, and runs the ask-to-unmute and mute-and-lower-hand actions on it. Every step's raw reply, with Zoom's own control names in the Zoom language being tested and what Zoom had on screen when something failed, is written to a JSON report under `reports/zoom-live/` so a report from another language can be reproduced and compared.
+
+> > > > > > > upstream/master
 
 ## v26.10.2
 

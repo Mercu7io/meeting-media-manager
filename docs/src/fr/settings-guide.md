@@ -483,9 +483,13 @@ Choisissez comment accéder au minuteur depuis la fenêtre principale :
 
 ### Minuteur à distance {#timer-remote}
 
-<!-- **Settings**: `timerRemoteEnable`, `timerRemotePort` -->
+<!-- **Settings**: `timerRemoteEnable`, `timerRemoteFocusLayout`, `timerRemotePort` -->
 
 Lorsque cette option est activée, M³ diffuse une copie en lecture seule de l'affichage du minuteur sous forme de page web sur votre réseau local, pour une tablette ou un téléphone au pupitre : l'orateur voit le temps restant sans que celui-ci apparaisse sur l'écran de l'assemblée locale ou dans un partage Zoom. La page suit le minuteur en temps réel, y compris le compte à rebours avant la réunion, l'horloge, les couleurs de dépassement de temps et l'alerte main levée ; toutes les commandes restent dans M³.
+
+Avec l'**affichage ciblé du minuteur à distance** activé, la page affiche le temps dans un grand anneau de progression : bleu-vert tant qu'il reste du temps, jaune dans la dernière minute, puis rouge avec le temps de dépassement (`+02:18`). Les participants Zoom qui ont levé la main sont listés à côté, dans l'ordre où ils l'ont fait, les quatre premiers par leur nom et le reste par un décompte, et chaque nouvelle main fait clignoter une bannière « Main levée » pendant quelques secondes pendant que les mains restent listées. L'affichage par défaut reste le grand temps simple.
+
+Tant que la page est ouverte, elle garde l'écran de l'appareil allumé, afin qu'une tablette au pupitre ne se verrouille pas et ne s'assombrisse pas en pleine partie. Lorsque le navigateur ne le permet pas sur l'adresse HTTP simple de la page, elle lit une vidéo silencieuse pour maintenir l'écran allumé.
 
 Les adresses à ouvrir sur l'appareil sont indiquées dans la fenêtre contextuelle du minuteur, avec un bouton pour les copier. Ne modifiez le port que si un autre programme l'utilise déjà. Notez que, tant que cette option est activée, toute personne se trouvant sur le même réseau peut ouvrir la page ; celle-ci n'affiche toutefois que le minuteur.
 

@@ -8,6 +8,13 @@ Para ver la lista completa de cambios entre versiones, consulta nuestro archivo 
 
 ### ✨ Nuevas funciones
 
+- ✨ **Control remoto del cronómetro**: La página del cronómetro para la tableta del atril tiene una vista enfocada opcional, que se activa en Configuración. Muestra el tiempo en un gran anillo de progreso que se vuelve amarillo en el último minuto y luego rojo con la cantidad de tiempo extra (+02:18), y a su lado enumera a los participantes de Zoom que han levantado la mano, en el orden en que lo hicieron: los cuatro primeros por su nombre, con un recuento de los demás. Cada nueva mano hace parpadear "Mano levantada" durante tres segundos, y la lista se actualiza a medida que las manos se levantan y se bajan. La visualización actual sigue siendo la predeterminada.
+- ✨ Zoom Meeting Manager (beta, Windows): Ahora se pueden notificar las manos levantadas sin tener ningún control sobre los participantes. Con "Solo dime sobre las manos levantadas" activado (en Ajustes, debajo del asistente de manos levantadas), M³ sigue notando quién levanta la mano, en su notificación y en la pantalla del cronómetro para el presidente, pero no muestra botones para reactivar el audio de un participante o bajarle la mano: de eso se encarga el operador de audio y video en el propio Zoom. Útil donde Zoom no muestra los controles de los participantes que necesita M³, o donde el operador prefiere mantener el control.
+
+## v26.10.2
+
+### ✨ Nuevas funciones
+
 - ✨ **Sugerencias de funciones**: De vez en cuando, M³ sugiere una función que un perfil todavía no usa, en una pequeña ventana de "¿Sabías que...?" que explica para qué sirve. Muestra como máximo una sugerencia cada vez que se abre un perfil, nunca desde 15 minutos antes de una reunión hasta que termina, y recuerda cada respuesta: "Recordármelo más tarde" pasa la sugerencia al final de la cola, "No, gracias" la oculta definitivamente y "Dejar de sugerir funciones" las desactiva todas para el perfil. Un "No" en el asistente de configuración también cuenta, y las respuestas se pueden restablecer en Configuración, dentro de Avanzado.
 - ✨ **Administrador de reuniones de Zoom (beta, Windows)**: Ahora M³ puede organizar su propia ventana y la ventana de la reunión de Zoom en tus pantallas. Dos nuevos pasos en el asistente de configuración de Zoom te preguntan dónde quieres la reunión de Zoom. En un mapa de tus pantallas, eliges la pantalla de Zoom (nunca la que ocupa la ventana de multimedia) y si Zoom la tiene para él solo o la comparte con M³. Después, en un dibujo de esa pantalla con su forma real, arrastras un divisor para repartirla entre las dos ventanas; el divisor se ajusta a las proporciones habituales. En cuanto se abre la reunión, M³ abre la lista de participantes de Zoom si se lo pediste, luego coloca las dos ventanas y, a partir de entonces, mantiene Zoom en su sitio: cuando Zoom mueve o cambia el tamaño de su ventana por sí solo (después de compartir pantalla, o al abrirse o cerrarse su lista de participantes), M³ lo vuelve a poner en su sitio, mientras que una ventana que muevas tú mismo se queda donde la pongas hasta la próxima reunión. Cada vez que M³ mueve Zoom por su cuenta, una notificación te lo indica y te permite detenerlo de inmediato, hasta que M³ se reinicie o para siempre. Mientras Zoom comparte la ventana de multimedia, lo que oculta la ventana de la reunión de Zoom, M³ abre la lista de participantes de Zoom en su lugar, para que sigas viendo quién levanta la mano para comentar. Cuando la opción "Meeting window view" de Zoom está en "Dual window" ("Use dual monitors" en versiones anteriores de Zoom), la segunda ventana de Zoom pasa a pantalla completa detrás de la ventana de multimedia, así que basta con ocultar la ventana de multimedia para verla. M³ también puede ajustar las dos ventanas una al lado de la otra con la función de ajuste del propio Windows, para que al arrastrar el borde que las separa se cambie el tamaño de las dos. Un botón "Organizar ventanas" en la ventana emergente de Zoom vuelve a poner todo en su sitio en cualquier momento, y la disposición se puede cambiar más adelante en Configuración, en Administrador de reuniones de Zoom. Se guarda por computadora, ya que depende de sus pantallas.
 
@@ -75,7 +82,7 @@ Para ver la lista completa de cambios entre versiones, consulta nuestro archivo 
 - ✨ **Reproducción de audio vinculado**: Se añadió compatibilidad para reproducir el audio de un archivo junto con el video de otro archivo. Esto puede ser útil para reproducir presentaciones de video con música de acompañamiento.
 - ✨ **Diseños de archivos multimedia supervisados**: Se añadió persistencia para los elementos multimedia supervisados y el orden de las secciones entre carpetas supervisadas. Esto garantiza que la lista de archivos multimedia se muestre de la misma manera incluso cuando la carpeta supervisada se sincroniza entre dispositivos.
 
-## v26 6.1
+## v26.6.1
 
 ### ✨ Nuevas funciones
 
@@ -84,7 +91,7 @@ Para ver la lista completa de cambios entre versiones, consulta nuestro archivo 
 - ✨ **Filtrar configuración**: Se añadió un cuadro de filtro a la página de configuración que te permite encontrar opciones por palabra clave o categoría. Para usarlo, simplemente haz clic en el botón Buscar de la esquina superior derecha de la página de configuración o usa el atajo de teclado estándar para buscar (Ctrl+F o Cmd+F).
 - ✨ **Advertencia por superposición de música de fondo**: Se añadió una notificación de advertencia cuando se inician archivos multimedia mientras se reproduce música de fondo. Los usuarios pueden elegir detener la música de fondo desde la notificación.
 
-## v26.6
+## v26.6.0
 
 ### ✨ Nuevas funciones
 

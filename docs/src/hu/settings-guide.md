@@ -483,9 +483,13 @@ Válassza ki, hogyan érhető el az időzítő a főablakból:
 
 ### Távoli időzítő {#timer-remote}
 
-<!-- **Settings**: `timerRemoteEnable`, `timerRemotePort` -->
+<!-- **Settings**: `timerRemoteEnable`, `timerRemoteFocusLayout`, `timerRemotePort` -->
 
 Ha be van kapcsolva, az M³ a helyi hálózaton weboldalként teszi elérhetővé az időzítő kijelzőjének csak olvasható másolatát a pulpitusnál lévő táblagép vagy telefon számára: így az előadó látja a hátralévő időt anélkül, hogy az megjelenne a gyülekezet kijelzőjén vagy a Zoom-megosztásban. Az oldal valós időben követi az időzítőt, beleértve az összejövetel előtti visszaszámlálást, az órát, az időtúllépés színeit és a kézfelemelés-jelzést, a vezérlők pedig mind az M³-ban maradnak.
+
+A **távoli időzítő fókuszált elrendezésének** bekapcsolásakor az oldal az időt nagy folyamatjelző gyűrűben jeleníti meg: zöldeskék, amíg van idő, sárga az utolsó percben, majd piros a túllépés mértékével (`+02:18`). A kezüket felemelő Zoom-résztvevők mellette, abban a sorrendben láthatók, ahogy felemelték a kezüket, az első négy névvel, a többi pedig darabszámmal; minden új kéz néhány másodpercre felvillant egy „Kéz felemelve” sávot, miközben a kezek listája megmarad. Az alapértelmezett kijelzés továbbra is a sima nagy idő.
+
+Amíg az oldal nyitva van, ébren tartja az eszköz képernyőjét, így a pulpitusnál lévő táblagép nem záródik le és nem halványul el egy programpont közben. Ahol a böngésző ezt az oldal egyszerű HTTP-címén nem engedi, néma videót játszik le a képernyő bekapcsolva tartásához.
 
 Az eszközön megnyitandó címek az időzítő felugró ablakában vannak felsorolva, egy másolás gombbal együtt. A portot csak akkor módosítsa, ha egy másik program már használja. Vegye figyelembe, hogy amíg ez be van kapcsolva, ugyanazon a hálózaton bárki megnyithatja az oldalt; az oldal azonban csak az időzítőt mutatja.
 

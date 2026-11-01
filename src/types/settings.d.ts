@@ -348,6 +348,7 @@ export interface SettingsValues {
   timerOvertimeShowAmountOnly: boolean;
   timerOvertimeTextColor: string;
   timerRemoteEnable: boolean;
+  timerRemoteFocusLayout: boolean;
   timerRemotePort: null | string;
   timerShowOnActionIsland: boolean;
   timerTextColor: string;
@@ -359,6 +360,8 @@ export interface SettingsValues {
   zoomAutoFocusMediaWindow: boolean;
   zoomCancelAutomationShortcut: null | string;
   zoomEnable: boolean;
+  /** Zoom's plain Raise hand button, on accounts where reactions are off. */
+  zoomHandButtonTitle: null | string;
   zoomHandRaisedPhrase: null | string;
   zoomJoinAudioTitle: null | string;
   /** Zoom's version when the learned names last passed a check. */
@@ -370,6 +373,7 @@ export interface SettingsValues {
   zoomMeetingManagerAutomatePostMeetingAudioSettings: boolean;
   zoomMeetingManagerEnable: boolean;
   zoomMeetingManagerHandAlert: boolean;
+  zoomMeetingManagerHandAlertNotifyOnly: boolean;
   zoomMeetingManagerMeetingId: null | string;
   zoomMeetingManagerPostMeetingAskToUnmute: boolean;
   /** No value: the setting is the button opening the setup assistant. */

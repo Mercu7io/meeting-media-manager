@@ -163,7 +163,7 @@ Een knop **Handsignaal** in het pop-upvenster van de timer toont een grote hand 
 
 #### Timer op een tablet {#user-guide-timer-remote}
 
-De optionele [timer op afstand](/settings-guide#timer-remote) biedt een alleen-lezen kopie van de timerweergave aan als webpagina op je lokale netwerk. Open het adres dat in het pop-upvenster van de timer staat in de browser van een tablet of telefoon bij het spreekgestoelte; de spreker ziet dan voor zichzelf hoeveel tijd er nog over is, terwijl alle bediening in M³ blijft.
+De optionele [timer op afstand](/settings-guide#timer-remote) biedt een alleen-lezen kopie van de timerweergave aan als webpagina op je lokale netwerk. Open het adres dat in het pop-upvenster van de timer staat in de browser van een tablet of telefoon bij het spreekgestoelte; de spreker ziet dan voor zichzelf hoeveel tijd er nog over is, terwijl alle bediening in M³ blijft. De optionele focusindeling toont de tijd in een voortgangsring, met de namen van Zoom-deelnemers die hun hand hebben opgestoken ernaast. De pagina houdt ook het scherm van de tablet wakker zolang hij open is, zodat het niet vergrendelt midden in een onderdeel.
 
 #### Snelle toegang {#user-guide-timer-quick-access}
 

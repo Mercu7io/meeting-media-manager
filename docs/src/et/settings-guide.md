@@ -483,9 +483,13 @@ Vali, kuidas põhiaknast taimerini jõuda:
 
 ### Taimeri kaugkuva {#timer-remote}
 
-<!-- **Settings**: `timerRemoteEnable`, `timerRemotePort` -->
+<!-- **Settings**: `timerRemoteEnable`, `timerRemoteFocusLayout`, `timerRemotePort` -->
 
 Kui see on sisse lülitatud, pakub M³ kohalikus võrgus veebilehena taimeri kuva koopiat, mida saab ainult vaadata, kõnepuldi juures olevale tahvelarvutile või telefonile: kõneleja näeb järelejäänud aega, ilma et see oleks koguduse ekraanil või Zoomi jagamises. Leht järgib taimerit reaalajas, sealhulgas koosoleku-eelset loendust, kella, ajaületuse värve ja käetõstmise märguannet, ning kõik juhtnupud jäävad M³-sse.
+
+Kui **taimeri kaugkuva fookusvaade** on sisse lülitatud, kuvab leht aega suure edenemisrõngana: türkiissininen, kuni aega jätkub, kollane viimasel minutil ja seejärel punane üleaja näiduga (`+02:18`). Zoomi osalejad, kes on käe tõstnud, loetletakse selle kõrval järjekorras, nagu nad seda tegid; esimesed neli nimepidi ja ülejäänud arvuna ning iga uus käsi vilgutab paariks sekundiks „Käsi tõstetud“ bännerit, samal ajal kui käed jäävad loendisse. Vaikevaade on endiselt lihtne suur aeg.
+
+Kui leht on avatud, hoiab see seadme ekraani ärkvel, nii et kõnepuldi tahvelarvuti ei lülitu programmi keskel lukku ega tuhmu. Kui brauser ei luba seda lehe tavalisel HTTP-aadressil, esitab see ekraani sisselülitamiseks vaikse video.
 
 Seadmes avatavad aadressid on loetletud taimeri hüpikaknas koos kopeerimisnupuga. Muuda porti ainult siis, kui mõni teine programm seda juba kasutab. Pea meeles, et kui see on sisse lülitatud, saab lehte avada igaüks samas võrgus; sellel ei ole midagi peale taimeri.
 

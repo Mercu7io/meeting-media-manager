@@ -465,6 +465,12 @@ export const settingsDefinitions: SettingsItems = {
     subgroup: 'timerDisplay',
     type: 'toggle',
   },
+  timerRemoteFocusLayout: {
+    depends: ['enableTimerDisplay', 'timerRemoteEnable'],
+    group: 'meetingTimer',
+    subgroup: 'timerDisplay',
+    type: 'toggle',
+  },
   timerRemotePort: {
     depends: ['enableTimerDisplay', 'timerRemoteEnable'],
     group: 'meetingTimer',
@@ -764,6 +770,26 @@ export const settingsDefinitions: SettingsItems = {
     platforms: ['win32'],
     subgroup: 'zoomMeetingManager',
     type: 'toggle',
+  },
+  // For congregations that would rather keep participant controls in Zoom:
+  // raised hands are still reported, but M³ offers no buttons that act on
+  // them.
+  zoomMeetingManagerHandAlertNotifyOnly: {
+    depends: 'zoomMeetingManagerHandAlert',
+    group: 'integrations',
+    platforms: ['win32'],
+    subgroup: 'zoomMeetingManager',
+    type: 'toggle',
+  },
+  // Zoom's plain Raise hand button, on accounts where reactions are turned
+  // off and Zoom shows that button instead of its React one.
+  zoomHandButtonTitle: {
+    depends: 'zoomMeetingManagerEnable',
+    group: 'integrations',
+    hidden: true,
+    platforms: ['win32'],
+    subgroup: 'zoomMeetingManager',
+    type: 'text',
   },
   zoomHandRaisedPhrase: {
     depends: 'zoomMeetingManagerEnable',
@@ -1323,6 +1349,7 @@ export const defaultSettings: SettingsValues = {
   timerOvertimeShowAmountOnly: true,
   timerOvertimeTextColor: '#ff0000',
   timerRemoteEnable: false,
+  timerRemoteFocusLayout: false,
   timerRemotePort: '8787',
   timerShowOnActionIsland: false,
   timerTextColor: '#ffffff',
@@ -1334,6 +1361,7 @@ export const defaultSettings: SettingsValues = {
   zoomAutoFocusMediaWindow: false,
   zoomCancelAutomationShortcut: 'Ctrl+Alt+Escape',
   zoomEnable: false,
+  zoomHandButtonTitle: null,
   zoomHandRaisedPhrase: null,
   zoomJoinAudioTitle: null,
   zoomLearnedVersion: null,
@@ -1344,6 +1372,7 @@ export const defaultSettings: SettingsValues = {
   zoomMeetingManagerAutomatePostMeetingAudioSettings: false,
   zoomMeetingManagerEnable: false,
   zoomMeetingManagerHandAlert: false,
+  zoomMeetingManagerHandAlertNotifyOnly: false,
   zoomMeetingManagerMeetingId: null,
   zoomMeetingManagerPostMeetingAskToUnmute: true,
   zoomMeetingManagerSetupAssistant: null,

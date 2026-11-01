@@ -1842,6 +1842,7 @@ watchImmediate(
     currentCongregation.value,
     currentSettings.value?.enableTimerDisplay,
     currentSettings.value?.timerRemoteEnable,
+    currentSettings.value?.timerRemoteFocusLayout,
     currentSettings.value?.timerRemotePort,
     locale.value,
   ],

@@ -163,7 +163,7 @@ Taimeri hüpikakna nupp **Käetõstmise märguanne** näitab taimeri ekraanil su
 
 #### Taimer tahvelarvutis {#user-guide-timer-remote}
 
-Valikuline [taimeri kaugkuva](/settings-guide#timer-remote) pakub kohalikus võrgus veebilehena taimeri kuva koopiat, mida saab ainult vaadata. Ava taimeri hüpikaknas näidatud aadress kõnepuldi juures oleva tahvelarvuti või telefoni brauseris – nii näeb kõneleja järelejäänud aega privaatselt, kuid kõik juhtnupud jäävad M³-sse.
+Valikuline [taimeri kaugkuva](/settings-guide#timer-remote) pakub kohalikus võrgus veebilehena taimeri kuva koopiat, mida saab ainult vaadata. Ava taimeri hüpikaknas näidatud aadress kõnepuldi juures oleva tahvelarvuti või telefoni brauseris – nii näeb kõneleja järelejäänud aega privaatselt, kuid kõik juhtnupud jäävad M³-sse. Selle valikuline fookusvaade kuvab aega edenemisrõngana ja loetleb selle kõrval Zoomi osalejate nimed, kes on käe tõstnud. Leht hoiab avatud olles ka tahvelarvuti ekraani ärkvel, et see programmi keskel lukku ei läheks.
 
 #### Kiirjuurdepääs {#user-guide-timer-quick-access}
 

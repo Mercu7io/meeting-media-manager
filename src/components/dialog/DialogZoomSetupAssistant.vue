@@ -972,9 +972,10 @@ const learnMic = async (micIsOn: boolean) => {
 // How Zoom marks a raised hand (and lowers one) is only known in the user's
 // Zoom language: M³ raises and lowers the host's own hand to read it.
 const handStatus = ref<Status>('pending');
-// Its hand is raised from Zoom's React button. Should M³ not find it (named
-// in the user's language, and sometimes kept in "More"), the user picks it
-// from Zoom's entries, as for Share.
+// Its hand is raised from Zoom's React button, or from Zoom's plain Raise
+// hand button where reactions are turned off for the account. Should M³ not
+// find either (named in the user's language, and sometimes kept in "More"),
+// the user picks whichever raises their hand, as for Share.
 const handReactMissing = ref(false);
 const handEntries = ref<{ more: string[]; toolbar: string[] }>({
   more: [],
@@ -988,11 +989,15 @@ const hasHandEntries = computed(
   () => handEntries.value.toolbar.length + handEntries.value.more.length > 0,
 );
 
-/** Like shareNeedsFirstPick: an expected step, not an error. */
+/**
+ * Like shareNeedsFirstPick: an expected step, not an error. Whatever went
+ * wrong, Zoom's buttons are offered to pick from, so the step is never a dead
+ * end: on accounts where reactions are turned off, and whenever M³ pressed a
+ * button that didn't raise the hand where it could see it.
+ */
 const handNeedsFirstPick = computed(
   () =>
     handStatus.value === 'failed' &&
-    handReactMissing.value &&
     !handEntryTried.value &&
     hasHandEntries.value,
 );
@@ -1010,7 +1015,7 @@ const handStatusText = computed(() => {
   return t('zoom-setup-hand-failed');
 });
 
-/** Learns raised hands through a React entry (the remembered one if none). */
+/** Learns raised hands through a React or Raise hand entry (the remembered ones if none). */
 const runHandLearning = async (reactEntry?: string) => {
   handStatus.value = 'running';
   const result = await withoutZoomFeedback(() =>
@@ -1022,7 +1027,9 @@ const runHandLearning = async (reactEntry?: string) => {
 
 const learnHand = async () => {
   await runHandLearning();
-  if (!handReactMissing.value) return;
+  // Zoom's buttons are only listed when the attempt failed: learning worked,
+  // or there is nothing left to pick from.
+  if (handStatus.value === 'passed') return;
   handEntries.value = await getZoomShareEntries();
   selectedHandEntry.value = null;
   handEntryTried.value = false;

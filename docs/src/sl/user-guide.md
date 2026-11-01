@@ -163,7 +163,7 @@ Gumb **Opozorilo glede dvignjene roke** v pojavnem oknu časovnika prikaže veli
 
 #### Časovnik na tablici {#user-guide-timer-remote}
 
-Neobvezni [oddaljeni časovnik](/settings-guide#timer-remote) streže kopijo prikaza časovnika kot spletno stran v vašem lokalnem omrežju. Odpri naslov, prikazan v pojavnem oknu časovnika, v brskalniku tablice ali telefona na govorniškem pultu, in govornik bo preostali čas videl zasebno, medtem ko vse kontrole ostanejo v M³.
+Neobvezni [oddaljeni časovnik](/settings-guide#timer-remote) streže kopijo prikaza časovnika kot spletno stran v vašem lokalnem omrežju. Odpri naslov, prikazan v pojavnem oknu časovnika, v brskalniku tablice ali telefona na govorniškem pultu, in govornik bo preostali čas videl zasebno, medtem ko vse kontrole ostanejo v M³. Njegov izbirni osrednji prikaz prikazuje čas v krogu napredka, ob njem pa so našteta imena udeležencev Zooma, ki so dvignili roko. Stran tudi ohranja zaslon tablice buden, dokler je odprta, da se med delom ne zaklene.
 
 #### Hiter dostop {#user-guide-timer-quick-access}
 

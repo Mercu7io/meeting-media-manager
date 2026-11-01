@@ -483,9 +483,13 @@ Kies hoe je de timer vanuit het hoofdvenster bereikt:
 
 ### Timer op afstand {#timer-remote}
 
-<!-- **Settings**: `timerRemoteEnable`, `timerRemotePort` -->
+<!-- **Settings**: `timerRemoteEnable`, `timerRemoteFocusLayout`, `timerRemotePort` -->
 
 Als dit is ingeschakeld, biedt M³ een alleen-lezen kopie van de timerweergave aan als webpagina op je lokale netwerk, voor een tablet of telefoon bij het spreekgestoelte: de spreker ziet de resterende tijd zonder dat die op het scherm van de gemeente of in een gedeeld Zoom-scherm te zien is. De pagina volgt de timer in realtime, inclusief het aftellen vóór de vergadering, de klok, de kleuren voor overschrijding en het handsignaal, en alle bediening blijft in M³.
+
+Met **focusindeling voor de timer op afstand** aan toont de pagina de tijd in een grote voortgangsring: turkoois zolang er tijd over is, geel in de laatste minuut en daarna rood met de hoeveelheid over tijd (`+02:18`). De Zoom-deelnemers die hun hand hebben opgestoken, staan ernaast in de volgorde waarin ze dat deden, de eerste vier met naam en de rest als aantal; elke nieuwe hand laat een paar seconden een banner 'Hand opgestoken' knipperen terwijl de handen in de lijst blijven staan. De standaardweergave blijft de gewone grote tijd.
+
+Zolang de pagina open is, houdt hij het scherm van het apparaat wakker, zodat een tablet bij het spreekgestoelte niet vergrendelt of dimt midden in een onderdeel. Waar de browser dat niet toestaat op het gewone HTTP-adres van de pagina, speelt hij een stille video af om het scherm aan te houden.
 
 De adressen die je op het apparaat moet openen, staan in het pop-upvenster van de timer, met een kopieerknop. Wijzig de poort alleen als een ander programma die al gebruikt. Let op: zolang dit is ingeschakeld, kan iedereen op hetzelfde netwerk de pagina openen; die toont echter alleen de timer.
 

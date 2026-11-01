@@ -483,9 +483,13 @@ Legen Sie fest, wie der Timer vom Hauptfenster aus erreichbar ist:
 
 ### Timer-Fernanzeige {#timer-remote}
 
-<!-- **Settings**: `timerRemoteEnable`, `timerRemotePort` -->
+<!-- **Settings**: `timerRemoteEnable`, `timerRemoteFocusLayout`, `timerRemotePort` -->
 
 Wenn aktiviert, stellt M³ die Timer-Anzeige als reine Ansicht auf einer Webseite in Ihrem lokalen Netzwerk bereit, für ein Tablet oder Smartphone am Rednerpult: Der Redner sieht die verbleibende Zeit, ohne dass sie auf dem Bildschirm der Versammlung oder in einer Zoom-Freigabe erscheint. Die Seite folgt dem Timer in Echtzeit, einschließlich Countdown vor der Zusammenkunft, Uhr, Überziehungsfarben und Handsignal, und alle Bedienelemente bleiben in M³.
+
+Mit **Fokusansicht für die Timer-Fernanzeige** zeigt die Seite die Zeit stattdessen in einem großen Fortschrittsring: türkis, solange genug Zeit bleibt, gelb in der letzten Minute und dann rot mit der Überziehungszeit (`+02:18`). Die Zoom-Teilnehmer, die die Hand erhoben haben, werden daneben in der Reihenfolge aufgelistet, in der sie sie erhoben haben, die ersten vier mit Namen und die übrigen als Anzahl; jede neue Hand lässt für einige Sekunden ein „Hand erhoben“-Banner aufblitzen, während die Hände aufgelistet bleiben. Die Standardanzeige bleibt die schlichte große Zeitanzeige.
+
+Solange die Seite geöffnet ist, hält sie den Bildschirm des Geräts wach, damit ein Tablet am Rednerpult während eines Programmpunkts nicht sperrt oder dunkel wird. Wo der Browser das auf der einfachen HTTP-Adresse der Seite nicht zulässt, spielt sie stattdessen ein stummes Video ab, um den Bildschirm eingeschaltet zu halten.
 
 Die auf dem Gerät zu öffnenden Adressen sind im Timer-Popup aufgeführt, mit einer Schaltfläche zum Kopieren. Ändern Sie den Port nur, wenn ihn bereits ein anderes Programm verwendet. Beachten Sie, dass jeder im selben Netzwerk die Seite öffnen kann, solange diese Funktion aktiviert ist; sie zeigt jedoch nichts außer dem Timer an.
 
