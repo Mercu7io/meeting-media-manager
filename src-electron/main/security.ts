@@ -110,14 +110,14 @@ app.on('web-contents-created', (_event, contents) => {
           });
         });
       });
-    } else {
-      logToWindow(
-        mainWindowInfo.mainWindow,
-        'Blocked new window creation to:',
-        url,
-        'warn',
-      );
     }
+
+    logToWindow(
+      mainWindowInfo.mainWindow,
+      'Blocked new window creation to:',
+      url,
+      'warn',
+    );
 
     return { action: 'deny' };
   });
